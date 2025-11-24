@@ -84,6 +84,20 @@ st.markdown("""
         margin: 10px 0;
         text-align: left;
     }
+    .chat-box {
+        background-color: #f8f9fa;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 10px;
+        width: 100%;
+    }
+    .chat-input {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -126,6 +140,8 @@ def load_data():
         df["date"] = df["start"].dt.date # Add date column for filtering
         df["day_of_week"] = df["start"].dt.day_name() # Add day of week for analysis
         df["week"] = df["start"].dt.isocalendar().week # Add week for trend analysis
+        df["month"] = df["start"].dt.month # Add month for filtering
+        df["year"] = df["start"].dt.year # Add year for filtering
 
         # Ensure shift is integer type and handle potential decimal values by rounding
         if col_shift:
@@ -150,6 +166,40 @@ st.success("Data Loaded Successfully 🎉")
 
 # =================== FILTERS (Sidebar) =====================
 st.sidebar.header("Filters")
+
+# Year Filter
+if 'year' in df.columns:
+    all_years = sorted(df['year'].dropna().unique())
+    selected_years = st.sidebar.multiselect(
+        "Select Year (Leave blank for All)",
+        options=all_years,
+        default=all_years  # Default to all if none selected
+    )
+    if selected_years:
+        df = df[df['year'].isin(selected_years)]
+
+# Month Filter
+if 'month' in df.columns:
+    all_months = sorted(df['month'].dropna().unique())
+    selected_months = st.sidebar.multiselect(
+        "Select Month (Leave blank for All)",
+        options=all_months,
+        default=all_months  # Default to all if none selected
+    )
+    if selected_months:
+        df = df[df['month'].isin(selected_months)]
+
+# Week Filter
+if 'week' in df.columns:
+    all_weeks = sorted(df['week'].dropna().unique())
+    selected_weeks = st.sidebar.multiselect(
+        "Select Week (Leave blank for All)",
+        options=all_weeks,
+        default=all_weeks  # Default to all if none selected
+    )
+    if selected_weeks:
+        df = df[df['week'].isin(selected_weeks)]
+
 # Date Range Filter: Default to "All" if no specific range is selected
 if 'date' in df.columns:
     min_date = df['date'].min()
@@ -189,7 +239,7 @@ if col_operator:
     if selected_operators:
         df = df[df[col_operator].isin(selected_operators)]
 
-# Shift Filter (with search functionality)
+# Shift Filter (with search functionality) - Ensure integers
 if col_shift:
     all_shifts = sorted(df[col_shift].dropna().unique())
     # Use multiselect with search functionality
@@ -217,6 +267,38 @@ else:
     # Handle case where there are no hours
     st.sidebar.text("No hour data available")
     hour_range = (0, 23)
+
+
+# =================== FATIGUE RISK CATEGORIZATION =====================
+st.subheader("📊 Fatigue Risk Categorization")
+
+# Define risk categories based on the provided matrix
+if col_speed and "hour" in df.columns:
+    # Create risk category column based on the matrix
+    df['risk_category'] = df.apply(lambda row: 
+        'Critical' if (row[col_speed] > df[col_speed].quantile(0.75) and row['hour'] in [2, 3, 4, 5]) else
+        'High' if (row[col_speed] > df[col_speed].quantile(0.5) and row['hour'] in [2, 3, 4, 5]) else
+        'Medium' if (row[col_speed] > df[col_speed].quantile(0.25) and row['hour'] in [2, 3, 4, 5]) else
+        'Low' if (row[col_speed] <= df[col_speed].quantile(0.25) and row['hour'] not in [2, 3, 4, 5]) else
+        'Medium', axis=1)  # Default to medium for other cases
+    
+    # Count alerts by risk category
+    risk_counts = df['risk_category'].value_counts().reindex(['Critical', 'High', 'Medium', 'Low'])
+    
+    # Create a bar chart showing the distribution of risk categories
+    fig_risk = px.bar(
+        x=risk_counts.index,
+        y=risk_counts.values,
+        title="🚨 Fatigue Risk Categories Distribution",
+        labels={'x': 'Risk Category', 'y': 'Number of Alerts'},
+        color=risk_counts.index,
+        color_discrete_map={'Critical': 'red', 'High': 'orange', 'Medium': 'yellow', 'Low': 'green'}
+    )
+    fig_risk.update_layout(
+        xaxis_title="Risk Category",
+        yaxis_title="Number of Alerts"
+    )
+    st.plotly_chart(fig_risk, width="stretch")
 
 
 # =================== KPI METRICS =====================
@@ -536,9 +618,9 @@ for message in st.session_state.chat_history:
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Input for user question
-user_input = st.text_input("Ask a question about the fatigue data...")
+user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
 
-if st.button("Send"):
+if st.button("Send", key="send_button"):
     if user_input:
         # Add user message to history
         st.session_state.chat_history.append({"role": "user", "content": user_input})
@@ -583,8 +665,16 @@ if st.button("Send"):
                 response = f"Rata-rata durasi kejadian fatigue adalah **{avg_duration:.2f} detik**."
             else:
                 response = "Tidak ada data durasi yang tersedia."
+        elif "risk" in user_input_lower and ("category" in user_input_lower or "level" in user_input_lower):
+            if 'risk_category' in df.columns and not df.empty:
+                risk_counts = df['risk_category'].value_counts()
+                response = f"Kategori risiko kelelahan:\n"
+                for category, count in risk_counts.items():
+                    response += f"- {category}: {count} kejadian\n"
+            else:
+                response = "Tidak ada data kategori risiko yang tersedia."
         else:
-            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, atau durasi."
+            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, atau kategori risiko."
         
         # Add AI response to history
         st.session_state.chat_history.append({"role": "assistant", "content": response})
@@ -596,4 +686,3 @@ if st.button("Send"):
 # ================= FOOTER ===========================
 st.markdown("---")
 st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
-
