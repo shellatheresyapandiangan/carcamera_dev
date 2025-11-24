@@ -57,7 +57,7 @@ def load_data():
         st.error("File 'manual fatique.xlsx' not found. Please check the file path.")
         return pd.DataFrame(), None, None, None
     except Exception as e:
-        st.error(f"Error loading data:  e}")
+        st.error(f"Error loading data: {e}")
         return pd.DataFrame(), None, None, None
 
 
