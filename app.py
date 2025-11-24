@@ -227,7 +227,23 @@ if st.button("Send", key="send_button"):
             else:
                 response = "Tidak ada data operator yang tersedia."
         else:
-            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, atau jam kritis."
+            # Improved fallback response with more context
+            context_info = []
+            if col_operator:
+                context_info.append(f"Operator: {df[col_operator].nunique() if not df.empty else 0} unik")
+            if col_shift:
+                context_info.append(f"Shift: {sorted(df[col_shift].dropna().unique()) if not df.empty else []}")
+            if "hour" in df.columns:
+                context_info.append(f"Jam: {min(df['hour']) if not df.empty and not df['hour'].isna().all() else 0}-{max(df['hour']) if not df.empty and not df['hour'].isna().all() else 23}")
+            if col_fleet_type:
+                context_info.append(f"Fleet: {df[col_fleet_type].nunique() if not df.empty else 0} jenis")
+            if "duration_sec" in df.columns:
+                context_info.append(f"Durasi: rata-rata {df['duration_sec'].mean():.2f} detik")
+            if col_speed:
+                context_info.append(f"Kecepatan: hingga {df[col_speed].max() if not df.empty and not df[col_speed].isna().all() else 0} km/h")
+            
+            context_str = ", ".join(context_info)
+            response = f"Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, atau jam kritis. Data saat ini mencakup: {context_str}."
         
         # Add AI response to history
         st.session_state.chat_history.append({"role": "assistant", "content": response})
