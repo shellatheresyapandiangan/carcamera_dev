@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -68,7 +69,7 @@ if df.empty:
 
 st.success("Data Loaded Successfully 🎉")
 
-st.dataframe(df, use_container_width=True)
+st.dataframe(df, width="stretch")
 
 # =================== FILTERS =====================
 st.sidebar.header("Filters")
@@ -118,7 +119,7 @@ fig_hour = px.bar(
     x="hour", y="alerts",
     title="⏰ Fatigue Alerts by Hour"
 )
-st.plotly_chart(fig_hour, use_container_width=True)
+st.plotly_chart(fig_hour, width="stretch")
 
 # Shift-Based
 if col_shift:
@@ -127,7 +128,7 @@ if col_shift:
         x=col_shift, y="alerts",
         title="👷 Fatigue Distribution by Shift"
     )
-    st.plotly_chart(fig_shift, use_container_width=True)
+    st.plotly_chart(fig_shift, width="stretch")
 
     # hour inside shift heatmap
     heat_df = df.groupby([col_shift, "hour"]).size().reset_index(name="alerts")
@@ -138,17 +139,19 @@ if col_shift:
         title="🔥 Heatmap Fatigue by Shift & Hour",
         color_continuous_scale="reds"
     )
-    st.plotly_chart(fig_heat, use_container_width=True)
+    st.plotly_chart(fig_heat, width="stretch")
 
 
 # Operator Ranking
 if col_operator:
+    operator_counts = df[col_operator].value_counts().reset_index()
+    operator_counts.columns = ["operator", "alerts"]
     fig_operator = px.bar(
-        df[col_operator].value_counts().reset_index(names=["operator", "alerts"]),
+        operator_counts,
         x="operator", y="alerts",
         title="🏆 Top Fatigue Alerts by Operator"
     )
-    st.plotly_chart(fig_operator, use_container_width=True)
+    st.plotly_chart(fig_operator, width="stretch")
 
 
 # =================== AI INSIGHT ENGINE =====================
@@ -185,3 +188,5 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.caption("Powered by Streamlit — Mining Fatigue Intelligence System™")
+
+```
