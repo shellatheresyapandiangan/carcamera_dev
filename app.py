@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -45,9 +46,10 @@ def load_data():
         df["hour"] = df["start"].dt.hour
         df["date"] = df["start"].dt.date # Add date column for filtering
 
-        # Ensure shift is integer type
+        # Ensure shift is integer type and handle potential decimal values by rounding
         if col_shift:
-            df[col_shift] = pd.to_numeric(df[col_shift], errors='coerce').astype('Int64') # Int64 allows NaN
+            # Convert to numeric, then round to nearest integer, then convert to int64 to remove decimals
+            df[col_shift] = pd.to_numeric(df[col_shift], errors='coerce').round().astype('Int64')
 
         return df, col_operator, col_shift, col_asset
     except FileNotFoundError:
@@ -133,6 +135,8 @@ if col_shift:
         title="🔥 Heatmap Fatigue by Shift & Hour",
         color_continuous_scale="reds"
     )
+    # Force the y-axis (shift) to be categorical to avoid decimal labels
+    fig_heat.update_yaxes(type='category')
     st.plotly_chart(fig_heat, width="stretch")
 
 
@@ -182,3 +186,5 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.caption("Powered by Streamlit — Mining Fatigue Intelligence System™")
+
+```
