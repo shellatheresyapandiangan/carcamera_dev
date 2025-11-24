@@ -15,36 +15,88 @@ st.title("😴 Fatigue Monitoring Intelligence Dashboard")
 # =================== LOAD DATA ======================
 @st.cache_data
 def load_data():
-    url = "https://raw.githubusercontent.com/shellatheresyapandiangan/carcamera_dev/main/manual%20fatique.xlsx"
+    # Load data from the uploaded file
+    # The path should point to where the uploaded file is stored in your environment
+    # For this example, I'll assume the file is named 'manual fatique.xlsx' and located in the current directory
+    # You might need to adjust the path based on your specific setup
+    try:
+        # Replace 'manual fatique.xlsx' with the actual path to your file
+        # If using Streamlit's file uploader, you would pass the file buffer here
+        df = pd.read_excel('manual fatique.xlsx', sheet_name=None, engine="openpyxl")
+        
+        # If the file has multiple sheets, concatenate them
+        if isinstance(df, dict):
+            df = pd.concat(df.values(), ignore_index=True)
+        
+        df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(" ", "_")
 
-    data = pd.read_excel(url, sheet_name=None, engine="openpyxl")
-    df = pd.concat(data.values(), ignore_index=True) if isinstance(data, dict) else data
+        # auto detect important columns
+        col_operator = next((c for c in df.columns if "operator" in c or "driver" in c), None)
+        col_shift = next((c for c in df.columns if "shift" in c), None)
+        col_asset = next((c for c in df.columns if "asset" in c or "vehicle" in c or "fleet" in c), None)
 
-    df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(" ", "_")
+        # detect timestamps (using the actual column names from the provided file)
+        # The columns are "(gmt+8 / wita)" and "(gmt+8 / wita)_2" (assuming the second one is the end time)
+        # Let's find columns that match the pattern
+        start_time_cols = [c for c in df.columns if "gmt" in c.lower() and "wita" in c.lower()]
+        # Assuming the first one is start and the second is end
+        if len(start_time_cols) >= 2:
+            df["start"] = pd.to_datetime(df[start_time_cols[0]], errors="coerce")
+            df["end"] = pd.to_datetime(df[start_time_cols[1]], errors="coerce")
+        elif len(start_time_cols) == 1:
+            # If only one time column, assume it's start time and set end time to start + 1 minute as a placeholder
+            df["start"] = pd.to_datetime(df[start_time_cols[0]], errors="coerce")
+            df["end"] = df["start"] + pd.Timedelta(minutes=1)
 
-    # auto detect important columns
-    col_operator = next((c for c in df.columns if "operator" in c or "driver" in c), None)
-    col_shift = next((c for c in df.columns if "shift" in c), None)
-    col_asset = next((c for c in df.columns if "asset" in c or "vehicle" in c or "fleet" in c), None)
+        df["duration_sec"] = (df["end"] - df["start"]).dt.total_seconds()
+        df["hour"] = df["start"].dt.hour
+        df["date"] = df["start"].dt.date # Add date column for filtering
 
-    # detect timestamps
-    timestamp_cols = [c for c in df.columns if "gmt" in c or "time" in c or "date" in c]
-
-    if len(timestamp_cols) >= 2:
-        df["start"] = pd.to_datetime(df[timestamp_cols[0]], errors="coerce")
-        df["end"] = pd.to_datetime(df[timestamp_cols[1]], errors="coerce")
-
-    df["duration_sec"] = (df["end"] - df["start"]).dt.total_seconds()
-    df["hour"] = df["start"].dt.hour
-
-    return df, col_operator, col_shift, col_asset
+        return df, col_operator, col_shift, col_asset
+    except FileNotFoundError:
+        st.error("File 'manual fatique.xlsx' not found. Please check the file path.")
+        return pd.DataFrame(), None, None, None
+    except Exception as e:
+        st.error(f"Error loading data:  e}")
+        return pd.DataFrame(), None, None, None
 
 
 df, col_operator, col_shift, col_asset = load_data()
 
+if df.empty:
+    st.stop()
+
 st.success("Data Loaded Successfully 🎉")
 
 st.dataframe(df, use_container_width=True)
+
+# =================== FILTERS =====================
+st.sidebar.header("Filters")
+# Date Range Filter: Default to "All" if no specific range is selected
+if 'date' in df.columns:
+    min_date = df['date'].min()
+    max_date = df['date'].max()
+    # Set default value to the full range initially
+    date_range_default = (min_date, max_date)
+
+    date_range_input = st.sidebar.date_input(
+        "Select Date Range (Leave blank for All)",
+        value=date_range_default, # Default to full range
+        min_value=min_date,
+        max_value=max_date
+    )
+
+    # Check if date_range_input is empty (user cleared the dates) or default full range is kept without interaction
+    if not date_range_input or (len(date_range_input) == 2 and date_range_input[0] == min_date and date_range_input[1] == max_date):
+        # If empty tuple or default full range, set to actual full range and mark as not explicitly filtered
+        date_range = (min_date, max_date)
+        date_filtered = False
+    else:
+        # If user selected a specific range, use it
+        date_range = tuple(date_range_input)
+        date_filtered = True
+    # Apply date filter
+    df = df[(df['date'] >= date_range[0]) & (df['date'] <= date_range[1])]
 
 # =================== KPI METRICS =====================
 st.subheader("📌 Key Safety Metrics")
@@ -54,7 +106,7 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Total Alerts", f"{len(df):,}")
 col2.metric("Operators", df[col_operator].nunique() if col_operator else "-")
 col3.metric("Assets", df[col_asset].nunique() if col_asset else "-")
-col4.metric("Avg Duration (sec)", round(df["duration_sec"].mean(),2))
+col4.metric("Avg Duration (sec)", round(df["duration_sec"].mean(),2) if "duration_sec" in df.columns else "N/A")
 
 
 # =================== TREND ANALYTICS =====================
@@ -105,22 +157,25 @@ st.subheader("🧠 Automated Insight Summary")
 insights = []
 
 # Peak hour
-peak_hour = df["hour"].value_counts().idxmax()
-insights.append(f"⏱ Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
+if "hour" in df.columns and not df.empty:
+    peak_hour = df["hour"].value_counts().idxmax()
+    insights.append(f"⏱ Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
 
 # Risk shift
-if col_shift:
+if col_shift and not df.empty:
     worst_shift = df[col_shift].value_counts().idxmax()
     insights.append(f"👷 Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
 
 # Worst operator
-if col_operator:
+if col_operator and not df.empty:
     worst_operator = df[col_operator].value_counts().idxmax()
     insights.append(f"⚠ Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
 
 # Duration risk
-if df["duration_sec"].mean() > 10:
-    insights.append("⏳ Long fatigue event duration suggests slow response — improve alerting training.")
+if "duration_sec" in df.columns and not df.empty:
+    avg_duration = df["duration_sec"].mean()
+    if not pd.isna(avg_duration) and avg_duration > 10:
+        insights.append("⏳ Long fatigue event duration suggests slow response — improve alerting training.")
 
 # Output insights
 for i in insights:
@@ -130,5 +185,3 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.caption("Powered by Streamlit — Mining Fatigue Intelligence System™")
-
-
