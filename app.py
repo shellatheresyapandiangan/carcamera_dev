@@ -1,9 +1,11 @@
-
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import requests
+import json
 
 # =================== CONFIG =====================
 st.set_page_config(
@@ -115,155 +117,71 @@ st.markdown("""
 # Header
 st.markdown('<div class="main-header"><h1>Safety Analysis and AI - Advanced Fatigue Analysis</h1><p>Proactive Safety Intelligence for Mining Operations</p></div>', unsafe_allow_html=True)
 
-# # =================== CHAT AI SECTION =====================
-# st.subheader("MineVision AI Assistant")
+# =================== CHAT AI SECTION =====================
+st.subheader("MineVision AI Assistant")
 
-# # Initialize session state for chat
-# if 'chat_history' not in st.session_state:
-#     st.session_state.chat_history = []
+# Initialize session state for chat
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
-# # Display chat history in a fancy box with white background
-# st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-# for message in st.session_state.chat_history:
-#     if message['role'] == 'user':
-#         st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
-#     else:
-#         st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
-# st.markdown('</div>', unsafe_allow_html=True)
+# Display chat history in a fancy box with white background
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for message in st.session_state.chat_history:
+    if message['role'] == 'user':
+        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# # Input for user question
-# user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
+# Input for user question
+user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
 
-# if st.button("Send", key="send_button"):
-#     if user_input:
-#         # Add user message to history
-#         st.session_state.chat_history.append({"role": "user", "content": user_input})
+def get_groq_response(prompt):
+    """Function to get response from Groq API"""
+    api_key = "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"  # Your provided token
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # Construct the full prompt with context
+    full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
+    
+    payload = {
+        "model": "llama3-70b-8192",  # Using a powerful model
+        "messages": [
+            {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
+            {"role": "user", "content": full_prompt}
+        ],
+        "temperature": 0.5,
+        "max_tokens": 500,
+        "top_p": 1,
+        "stop": None
+    }
+    
+    try:
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        return result['choices'][0]['message']['content'].strip()
+    except requests.exceptions.RequestException as e:
+        return f"Error calling Groq API: {str(e)}"
+    except KeyError:
+        return "Received unexpected response from Groq API."
+
+if st.button("Send", key="send_button"):
+    if user_input:
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-#         # Process the question and generate response based on data
-#         response = ""
-#         user_input_lower = user_input.lower()
+        # Get response from Groq API
+        response = get_groq_response(user_input)
         
-#         # Improved RAG responses based on data analysis and Wenco insights
-#         if "operator" in user_input_lower and ("sering" in user_input_lower or "banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
-#             if col_operator and not df.empty:
-#                 top_operator = df[col_operator].value_counts().idxmax()
-#                 count = df[col_operator].value_counts().iloc[0]
-#                 total_alerts = len(df)
-#                 percentage = (count / total_alerts) * 100
-#                 response = f"Operator dengan jumlah kejadian ngantuk paling banyak adalah **{top_operator}** dengan **{count}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#             else:
-#                 response = "Tidak ada data operator yang tersedia."
-#         elif "shift" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
-#             if col_shift and not df.empty:
-#                 top_shift = df[col_shift].value_counts().idxmax()
-#                 count = df[col_shift].value_counts().iloc[0]
-#                 total_alerts = len(df)
-#                 percentage = (count / total_alerts) * 100
-#                 response = f"Shift dengan jumlah kejadian ngantuk paling banyak adalah **Shift {top_shift}** dengan **{count}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#             else:
-#                 response = "Tidak ada data shift yang tersedia."
-#         elif "jam" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower or "sering" in user_input_lower):
-#             if "hour" in df.columns and not df.empty:
-#                 top_hour = df["hour"].value_counts().idxmax()
-#                 count = df["hour"].value_counts().iloc[0]
-#                 total_alerts = len(df)
-#                 percentage = (count / total_alerts) * 100
-#                 response = f"Jam dengan jumlah kejadian ngantuk paling banyak adalah pukul **{top_hour}:00** dengan **{count}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#             else:
-#                 response = "Tidak ada data jam yang tersedia."
-#         elif "fleet" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
-#             if col_fleet_type and not df.empty:
-#                 top_fleet = df[col_fleet_type].value_counts().idxmax()
-#                 count = df[col_fleet_type].value_counts().iloc[0]
-#                 total_alerts = len(df)
-#                 percentage = (count / total_alerts) * 100
-#                 response = f"Fleet type dengan jumlah kejadian ngantuk paling banyak adalah **{top_fleet}** dengan **{count}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#             else:
-#                 response = "Tidak ada data fleet type yang tersedia."
-#         elif "total" in user_input_lower and "alert" in user_input_lower:
-#             response = f"Total kejadian fatigue alert adalah **{len(df)}**."
-#         elif "average" in user_input_lower and ("duration" in user_input_lower or "lama" in user_input_lower):
-#             if "duration_sec" in df.columns and not df.empty:
-#                 avg_duration = df["duration_sec"].mean()
-#                 response = f"Rata-rata durasi kejadian fatigue adalah **{avg_duration:.2f} detik**."
-#             else:
-#                 response = "Tidak ada data durasi yang tersedia."
-#         elif "risk" in user_input_lower and ("category" in user_input_lower or "level" in user_input_lower):
-#             if 'risk_category' in df.columns and not df.empty:
-#                 risk_counts = df['risk_category'].value_counts()
-#                 total_alerts = len(df)
-#                 response = f"Kategori risiko kelelahan:\n"
-#                 for category, count in risk_counts.items():
-#                     percentage = (count / total_alerts) * 100
-#                     response += f"- {category}: {count} kejadian ({percentage:.1f}% dari total)\n"
-#             else:
-#                 response = "Tidak ada data kategori risiko yang tersedia."
-#         elif "speed" in user_input_lower and ("high" in user_input_lower or "fast" in user_input_lower):
-#             if col_speed and not df.empty:
-#                 high_speed_threshold = df[col_speed].quantile(0.75)
-#                 high_speed_count = len(df[df[col_speed] >= high_speed_threshold])
-#                 total_alerts = len(df)
-#                 percentage = (high_speed_count / total_alerts) * 100
-#                 response = f"Jumlah kejadian fatigue pada kecepatan tinggi (> {high_speed_threshold:.0f} km/h) adalah **{high_speed_count}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#             else:
-#                 response = "Tidak ada data kecepatan yang tersedia."
-#         elif "critical" in user_input_lower and "hour" in user_input_lower:
-#             critical_hours = [2, 3, 4, 5]
-#             critical_alerts = df[df['hour'].isin(critical_hours)]
-#             total_alerts = len(df)
-#             percentage = (len(critical_alerts) / total_alerts) * 100 if total_alerts > 0 else 0
-#             response = f"Jumlah kejadian fatigue pada jam kritis (2-5 AM) adalah **{len(critical_alerts)}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#         elif "madar" in user_input_lower:
-#             if col_operator and not df.empty:
-#                 # Check if "Madar" is an operator in the data
-#                 madar_data = df[df[col_operator].str.contains('Madar', case=False, na=False)]
-#                 if not madar_data.empty:
-#                     madar_count = len(madar_data)
-#                     total_alerts = len(df)
-#                     percentage = (madar_count / total_alerts) * 100
-#                     response = f"Operator **Madar** tercatat memiliki **{madar_count}** kejadian ngantuk ({percentage:.1f}% dari total {total_alerts} kejadian)."
-#                 else:
-#                     response = "Operator 'Madar' tidak ditemukan dalam data."
-#             else:
-#                 response = "Tidak ada data operator yang tersedia."
-#         elif "frms" in user_input_lower or "fatigue risk management" in user_input_lower:
-#             response = "Sistem FRMS (Fatigue Risk Management System) yang digunakan adalah pendekatan berbasis data untuk mengidentifikasi, menilai, dan mengendalikan risiko kelelahan. Sistem ini menggabungkan data dari berbagai sumber seperti jam kerja, pola tidur, dan deteksi kelelahan langsung untuk memberikan wawasan dan rekomendasi pencegahan. Dalam konteks mining, FRMS membantu mengurangi kecelakaan dan meningkatkan produktivitas dengan mengelola faktor-faktor risiko kelelahan secara sistematis."
-#         elif "intervensi" in user_input_lower or "intervention" in user_input_lower:
-#             # Use data to explain intervention rates
-#             if col_operator and not df.empty:
-#                 total_operators = df[col_operator].nunique()
-#                 total_alerts = len(df)
-#                 # Assuming each alert might require an intervention
-#                 avg_interventions_per_operator = total_alerts / total_operators if total_operators > 0 else 0
-#                 response = f"Berdasarkan data, rata-rata intervensi yang diperlukan per operator adalah sekitar **{avg_interventions_per_operator:.2f}** kejadian. Menurut dokumentasi Wenco, rata-rata hanya ada satu alarm per 22 jam operator, yang menunjukkan tingkat intervensi yang dapat dikelola."
-#             else:
-#                 response = "Data untuk menghitung tingkat intervensi tidak tersedia."
-#         elif "implementasi" in user_input_lower or "implementation" in user_input_lower or "resistensi" in user_input_lower or "resistance" in user_input_lower:
-#             response = "Berdasarkan dokumentasi Wenco, implementasi FRMS di industri mining menghadapi beberapa tantangan seperti resistensi tenaga kerja (privasi, takut dikenai sanksi), isu teknis (reliabilitas awal, lingkungan keras), dan hambatan manajemen (biaya tinggi, justifikasi ROI). Namun, realitas modern menunjukkan bahwa kekhawatiran seperti 'fleet shutdown' berlebihan, dengan tingkat alarm yang dapat dikelola. Vendor juga telah berkembang, menawarkan dukungan dan model penerapan yang lebih baik."
-#         else:
-#             # Improved fallback response with more context
-#             context_info = []
-#             if col_operator:
-#                 context_info.append(f"Operator: {df[col_operator].nunique() if not df.empty else 0} unik")
-#             if col_shift:
-#                 context_info.append(f"Shift: {sorted(df[col_shift].dropna().unique()) if not df.empty else []}")
-#             if "hour" in df.columns:
-#                 context_info.append(f"Jam: {min(df['hour']) if not df.empty and not df['hour'].isna().all() else 0}-{max(df['hour']) if not df.empty and not df['hour'].isna().all() else 23}")
-#             if col_fleet_type:
-#                 context_info.append(f"Fleet: {df[col_fleet_type].nunique() if not df.empty else 0} jenis")
-#             if "duration_sec" in df.columns:
-#                 context_info.append(f"Durasi: rata-rata {df['duration_sec'].mean():.2f} detik")
-#             if col_speed:
-#                 context_info.append(f"Kecepatan: hingga {df[col_speed].max() if not df.empty and not df[col_speed].isna().all() else 0} km/h")
-            
-#             context_str = ", ".join(context_info)
-#             response = f"Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, jam kritis, FRMS, intervensi, atau implementasi. Data saat ini mencakup: {context_str}."
+        # Add AI response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
         
-#         # Add AI response to history
-#         st.session_state.chat_history.append({"role": "assistant", "content": response})
-        
-#         # Rerun to update the chat display
-#         st.rerun()
+        # Rerun to update the chat display
+        st.rerun()
 
 
 # =================== LOAD DATA ======================
@@ -832,3 +750,4 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
+```
