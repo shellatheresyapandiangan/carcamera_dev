@@ -92,17 +92,107 @@ st.markdown("""
         margin-top: 10px;
         width: 100%;
     }
-    .chat-input {
-        width: 100%;
-        padding: 8px;
-        border-radius: 4px;
+    .user-question {
+        background-color: white;
         border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .ai-answer {
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<div class="main-header"><h1>⛏️ MineVision AI - Advanced Fatigue Analytics</h1><p>Proactive Safety Intelligence for Mining Operations</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header"><h1>Safety Analysis and AI - Advanced Fatigue Analysis</h1><p>Proactive Safety Intelligence for Mining Operations</p></div>', unsafe_allow_html=True)
+
+# =================== CHAT AI SECTION =====================
+st.subheader("MineVision AI Assistant")
+
+# Initialize session state for chat
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+
+# Display chat history in a fancy box
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for message in st.session_state.chat_history:
+    if message['role'] == 'user':
+        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Input for user question
+user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
+
+if st.button("Send", key="send_button"):
+    if user_input:
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        
+        # Process the question and generate response based on data
+        response = ""
+        user_input_lower = user_input.lower()
+        
+        if "operator" in user_input_lower and ("sering" in user_input_lower or "banyak" in user_input_lower or "most" in user_input_lower):
+            if col_operator and not df.empty:
+                top_operator = df[col_operator].value_counts().idxmax()
+                count = df[col_operator].value_counts().iloc[0]
+                response = f"Operator dengan jumlah kejadian ngantuk paling banyak adalah **{top_operator}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data operator yang tersedia."
+        elif "shift" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
+            if col_shift and not df.empty:
+                top_shift = df[col_shift].value_counts().idxmax()
+                count = df[col_shift].value_counts().iloc[0]
+                response = f"Shift dengan jumlah kejadian ngantuk paling banyak adalah **Shift {top_shift}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data shift yang tersedia."
+        elif "jam" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower or "sering" in user_input_lower):
+            if "hour" in df.columns and not df.empty:
+                top_hour = df["hour"].value_counts().idxmax()
+                count = df["hour"].value_counts().iloc[0]
+                response = f"Jam dengan jumlah kejadian ngantuk paling banyak adalah pukul **{top_hour}:00** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data jam yang tersedia."
+        elif "fleet" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
+            if col_fleet_type and not df.empty:
+                top_fleet = df[col_fleet_type].value_counts().idxmax()
+                count = df[col_fleet_type].value_counts().iloc[0]
+                response = f"Fleet type dengan jumlah kejadian ngantuk paling banyak adalah **{top_fleet}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data fleet type yang tersedia."
+        elif "total" in user_input_lower and "alert" in user_input_lower:
+            response = f"Total kejadian fatigue alert adalah **{len(df)}**."
+        elif "average" in user_input_lower and ("duration" in user_input_lower or "lama" in user_input_lower):
+            if "duration_sec" in df.columns and not df.empty:
+                avg_duration = df["duration_sec"].mean()
+                response = f"Rata-rata durasi kejadian fatigue adalah **{avg_duration:.2f} detik**."
+            else:
+                response = "Tidak ada data durasi yang tersedia."
+        elif "risk" in user_input_lower and ("category" in user_input_lower or "level" in user_input_lower):
+            if 'risk_category' in df.columns and not df.empty:
+                risk_counts = df['risk_category'].value_counts()
+                response = f"Kategori risiko kelelahan:\n"
+                for category, count in risk_counts.items():
+                    response += f"- {category}: {count} kejadian\n"
+            else:
+                response = "Tidak ada data kategori risiko yang tersedia."
+        else:
+            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, atau kategori risiko."
+        
+        # Add AI response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        
+        # Rerun to update the chat display
+        st.rerun()
+
 
 # =================== LOAD DATA ======================
 @st.cache_data
@@ -162,7 +252,7 @@ df, col_operator, col_shift, col_asset, col_fleet_type, col_speed = load_data()
 if df.empty:
     st.stop()
 
-st.success("Data Loaded Successfully 🎉")
+st.success("Data Loaded Successfully")
 
 # =================== FILTERS (Sidebar) =====================
 st.sidebar.header("Filters")
@@ -270,7 +360,7 @@ else:
 
 
 # =================== FATIGUE RISK CATEGORIZATION =====================
-st.subheader("📊 Fatigue Risk Categorization")
+st.subheader("Fatigue Risk Categorization")
 
 # Define risk categories based on the provided matrix
 if col_speed and "hour" in df.columns:
@@ -289,37 +379,49 @@ if col_speed and "hour" in df.columns:
     fig_risk = px.bar(
         x=risk_counts.index,
         y=risk_counts.values,
-        title="🚨 Fatigue Risk Categories Distribution",
+        title="Fatigue Risk Categories Distribution",
         labels={'x': 'Risk Category', 'y': 'Number of Alerts'},
         color=risk_counts.index,
         color_discrete_map={'Critical': 'red', 'High': 'orange', 'Medium': 'yellow', 'Low': 'green'}
     )
     fig_risk.update_layout(
         xaxis_title="Risk Category",
-        yaxis_title="Number of Alerts"
+        yaxis_title="Number of Alerts",
+        height=400
+    )
+    # Add legend to explain each category
+    fig_risk.update_layout(
+        legend_title_text="Risk Level",
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="left",
+            x=1.02
+        )
     )
     st.plotly_chart(fig_risk, width="stretch")
 
 
 # =================== KPI METRICS =====================
-st.subheader("📊 Executive Safety Dashboard")
+st.subheader("Executive Safety Dashboard")
 
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("Total Alerts", f"{len(df):,}")
 col2.metric("Operators", df[col_operator].nunique() if col_operator else "-")
-col3.metric("Assets", df[col_asset].nunique() if col_asset else "-")
+col3.metric("Qty Equipment", df[col_asset].nunique() if col_asset else "-")  # Changed from "Assets" to "Qty Equipment"
 col4.metric("Avg Duration (sec)", round(df["duration_sec"].mean(),2) if "duration_sec" in df.columns else "N/A")
 
 
 # =================== TREND ANALYTICS =====================
-st.subheader("📈 Fatigue Trend Analysis")
+st.subheader("Fatigue Trend Analysis")
 
 # Hourly
 fig_hour = px.bar(
     df.groupby("hour").size().reset_index(name="alerts"),
     x="hour", y="alerts",
-    title="⏰ Fatigue Alerts by Hour"
+    title="Fatigue Alerts by Hour"
 )
 st.plotly_chart(fig_hour, width="stretch")
 
@@ -328,8 +430,10 @@ if col_shift:
     fig_shift = px.bar(
         df.groupby(col_shift).size().reset_index(name="alerts"),
         x=col_shift, y="alerts",
-        title="👷 Fatigue Distribution by Shift"
+        title="Fatigue Distribution by Shift"
     )
+    # Force the x-axis (shift) to be categorical to avoid decimal labels
+    fig_shift.update_xaxes(type='category')
     st.plotly_chart(fig_shift, width="stretch")
 
     # hour inside shift heatmap
@@ -338,7 +442,7 @@ if col_shift:
     fig_heat = px.density_heatmap(
         heat_df,
         x="hour", y=col_shift, z="alerts",
-        title="🔥 Heatmap Fatigue by Shift & Hour",
+        title="Heatmap Fatigue by Shift & Hour",
         color_continuous_scale="reds"
     )
     # Force the y-axis (shift) to be categorical to avoid decimal labels
@@ -353,13 +457,13 @@ if col_operator:
     fig_operator = px.bar(
         operator_counts,
         x="operator", y="alerts",
-        title="🏆 Top Fatigue Alerts by Operator"
+        title="Top Fatigue Alerts by Operator"
     )
     st.plotly_chart(fig_operator, width="stretch")
 
 
 # =================== NEW CHARTS (Based on Mining Fatigue Factors) =====================
-st.subheader("🔬 Advanced Mining Fatigue Analytics")
+st.subheader("Advanced Mining Fatigue Analytics")
 
 # 1. Day of Week Analysis (Workload Pattern)
 if 'day_of_week' in df.columns:
@@ -367,7 +471,7 @@ if 'day_of_week' in df.columns:
     fig_day = px.bar(
         day_counts,
         x=day_counts.index, y=day_counts.values,
-        title="📅 Fatigue Alerts by Day of Week (Workload Pattern)"
+        title="Fatigue Alerts by Day of Week (Workload Pattern)"
     )
     st.plotly_chart(fig_day, width="stretch")
 
@@ -378,7 +482,7 @@ if col_fleet_type:
     fig_fleet = px.bar(
         fleet_counts,
         x=col_fleet_type, y="alerts",
-        title="🚛 Fatigue Alerts by Fleet Type (Task Complexity)"
+        title="Fatigue Alerts by Fleet Type (Task Complexity)"
     )
     st.plotly_chart(fig_fleet, width="stretch")
 
@@ -390,7 +494,7 @@ if col_speed and "hour" in df.columns:
         fig_speed_hour = px.scatter(
             speed_df,
             x="hour", y=col_speed,
-            title="🚗 Speed vs Hour of Day (Fatigue Events) - Environmental Factor",
+            title="Speed vs Hour of Day (Fatigue Events) - Environmental Factor",
             hover_data=[col_operator, col_asset]
         )
         st.plotly_chart(fig_speed_hour, width="stretch")
@@ -400,7 +504,7 @@ if "duration_sec" in df.columns and "hour" in df.columns:
     fig_duration_hour = px.scatter(
         df,
         x="hour", y="duration_sec",
-        title="⏱️ Fatigue Event Duration vs Hour of Day (Physiological Response)",
+        title="Fatigue Event Duration vs Hour of Day (Physiological Response)",
         hover_data=[col_operator, col_asset]
     )
     st.plotly_chart(fig_duration_hour, width="stretch")
@@ -411,7 +515,7 @@ if col_operator and col_shift:
     fig_op_shift = px.bar(
         op_shift_counts,
         x=col_operator, y="alerts", color=col_shift,
-        title="👤 Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
+        title="Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
     )
     st.plotly_chart(fig_op_shift, width="stretch")
 
@@ -427,7 +531,7 @@ if 'week' in df.columns and col_shift:
         weekly_shift_trend,
         x='week', y='alerts',
         color='shift_legend',
-        title="🗓️ Weekly Fatigue Trend by Shift (Recovery Pattern)",
+        title="Weekly Fatigue Trend by Shift (Recovery Pattern)",
         markers=True
     )
     # Customize colors for each shift
@@ -469,26 +573,28 @@ if col_speed:
         fig_speed_dist = px.histogram(
             speed_df_clean,
             x=col_speed,
-            title="📏 Speed Distribution (Task Complexity Indicator)",
+            title="Speed Distribution (Task Complexity Indicator)",
             nbins=20
         )
         st.plotly_chart(fig_speed_dist, width="stretch")
 
 
-# =================== FATIGUE RISK ASSESSMENT =====================
-st.subheader("⚠️ Mining-Specific Fatigue Risk Assessment")
+# =================== INSIGHTS BY ADVANCED ANALYTICS =====================
+st.subheader("Insights by Advanced Analytics")
 
 # 1. Critical Hour Analysis (2-5 AM)
 critical_hours = [2, 3, 4, 5]
 critical_alerts = df[df['hour'].isin(critical_hours)]
 critical_pct = (len(critical_alerts) / len(df)) * 100 if len(df) > 0 else 0
 
-st.markdown(f"### 🌙 Critical Hour Risk (2-5 AM)")
-st.metric("Critical Hour Alerts", f"{len(critical_alerts)}", f"{critical_pct:.1f}% of total alerts")
+st.markdown(f"Critical Hour Risk (2-5 AM)")
+# Use conditional formatting for background color
+bg_color = "#ffcccc" if critical_pct > 50 else "#ffebcc" if critical_pct > 25 else "#ffffcc" if critical_pct > 10 else "#e6ffe6"
+st.markdown(f'<div style="background-color: {bg_color}; padding: 10px; border-radius: 5px;">Critical Hour Alerts: {len(critical_alerts)} ({critical_pct:.1f}% of total alerts)</div>', unsafe_allow_html=True)
 if critical_pct > 10:  # If more than 10% of alerts happen in critical hours
-    st.warning(f"⚠️ High risk: {critical_pct:.1f}% of fatigue alerts occur during critical hours (2-5 AM). This is a known circadian dip period.")
+    st.warning(f"High risk: {critical_pct:.1f}% of fatigue alerts occur during critical hours (2-5 AM). This is a known circadian dip period.")
 else:
-    st.info(f"✅ {critical_pct:.1f}% of alerts occur during critical hours. This is within acceptable range.")
+    st.info(f"{critical_pct:.1f}% of alerts occur during critical hours. This is within acceptable range.")
 
 # 2. High-Speed Fatigue Analysis (Environmental Risk)
 if col_speed:
@@ -496,89 +602,92 @@ if col_speed:
     high_speed_fatigue = df[df[col_speed] >= high_speed_threshold]
     high_speed_pct = (len(high_speed_fatigue) / len(df)) * 100 if len(df) > 0 else 0
     
-    st.markdown(f"### 🚀 High-Speed Fatigue Risk (Speed > {high_speed_threshold:.0f} km/h)")
+    st.markdown(f"High-Speed Fatigue Risk (Speed > {high_speed_threshold:.0f} km/h)")
     st.metric("High-Speed Fatigue Events", f"{len(high_speed_fatigue)}", f"{high_speed_pct:.1f}% of total alerts")
     if high_speed_pct > 20:  # If more than 20% of alerts happen at high speed
-        st.warning(f"⚠️ High risk: {high_speed_pct:.1f}% of fatigue alerts occur at high speeds. This increases accident severity potential.")
+        st.warning(f"High risk: {high_speed_pct:.1f}% of fatigue alerts occur at high speeds. This increases accident severity potential.")
     else:
-        st.info(f"✅ {high_speed_pct:.1f}% of alerts occur at high speeds. This is within acceptable range.")
+        st.info(f"{high_speed_pct:.1f}% of alerts occur at high speeds. This is within acceptable range.")
 
 # 3. Shift Pattern Analysis
 if col_shift:
     shift_counts = df[col_shift].value_counts()
     shift_alerts_by_hour = df.groupby([col_shift, 'hour']).size().reset_index(name='alerts')
     
-    st.markdown(f"### 🔄 Shift Pattern Risk")
+    st.markdown(f"Shift Pattern Risk")
     for shift_val in shift_counts.index:
         shift_pct = (shift_counts[shift_val] / len(df)) * 100
         st.metric(f"Shift {shift_val} Alerts", f"{shift_counts[shift_val]}", f"{shift_pct:.1f}% of total alerts")
         if shift_pct > 50:  # If one shift has more than 50% of alerts
-            st.warning(f"⚠️ Shift {shift_val} has disproportionately high alerts ({shift_pct:.1f}%). Review shift scheduling and workload.")
+            st.warning(f"Shift {shift_val} has disproportionately high alerts ({shift_pct:.1f}%). Review shift scheduling and workload.")
         else:
-            st.info(f"✅ Shift {shift_val} alert distribution is acceptable ({shift_pct:.1f}%).")
+            st.info(f"Shift {shift_val} alert distribution is acceptable ({shift_pct:.1f}%).")
 
 # 4. Operator Risk Profiling
 if col_operator:
     operator_alerts = df[col_operator].value_counts()
     top_risk_operators = operator_alerts.head(5)  # Top 5 operators by alerts
     
-    st.markdown(f"### 👤 High-Risk Operator Identification")
+    st.markdown(f"High-Risk Operator Identification")
     for op_name, count in top_risk_operators.items():
         op_pct = (count / len(df)) * 100
         st.metric(f"Operator: {op_name}", f"{count} alerts", f"{op_pct:.1f}% of total alerts")
         if op_pct > 5:  # If an operator has more than 5% of all alerts
-            st.warning(f"⚠️ Operator {op_name} has high fatigue risk ({op_pct:.1f}% of alerts). Consider coaching or rest plan.")
+            st.warning(f"Operator {op_name} has high fatigue risk ({op_pct:.1f}% of alerts). Consider coaching or rest plan.")
         else:
-            st.info(f"✅ Operator {op_name} fatigue risk is within acceptable range ({op_pct:.1f}%).")
+            st.info(f"Operator {op_name} fatigue risk is within acceptable range ({op_pct:.1f}%).")
 
 
 # =================== FATIGUE RISK MATRIX =====================
-st.subheader("📋 Fatigue Risk Matrix")
-
-risk_matrix_data = [
-    ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
-    ["Moderate fatigue + decline haul road", "Serious injury", "High"],
-    ["High fatigue + low-risk task", "Minor injury", "Medium"],
-    ["Low fatigue + non-hazard task", "No injury", "Low"]
-]
-
-risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
-
-# Display risk matrix as a styled table
-html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
-for _, row in risk_df.iterrows():
-    risk_class = row["Risk Tier"].lower()
-    html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
-html_string += '</tbody></table>'
-
-st.markdown(html_string, unsafe_allow_html=True)
+# Moved to sidebar
+with st.sidebar:
+    st.subheader("Fatigue Risk Matrix")
+    
+    risk_matrix_data = [
+        ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
+        ["Moderate fatigue + decline haul road", "Serious injury", "High"],
+        ["High fatigue + low-risk task", "Minor injury", "Medium"],
+        ["Low fatigue + non-hazard task", "No injury", "Low"]
+    ]
+    
+    risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
+    
+    # Display risk matrix as a styled table
+    html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
+    for _, row in risk_df.iterrows():
+        risk_class = row["Risk Tier"].lower()
+        html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
+    html_string += '</tbody></table>'
+    
+    st.markdown(html_string, unsafe_allow_html=True)
 
 
 # =================== AI INSIGHT ENGINE =====================
-st.subheader("🤖 Automated Insight Summary")
+st.subheader("Automated Insight Summary")
 
+# Create a more elegant summary
 insights = []
 
 # Peak hour
 if "hour" in df.columns and not df.empty:
     peak_hour = df["hour"].value_counts().idxmax()
-    insights.append(f"⏱ Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
+    insights.append(f"Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
 
 # Risk shift
 if col_shift and not df.empty:
     worst_shift = df[col_shift].value_counts().idxmax()
-    insights.append(f"👷 Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
+    insights.append(f"Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
 
 # Worst operator
 if col_operator and not df.empty:
     worst_operator = df[col_operator].value_counts().idxmax()
-    insights.append(f"⚠ Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
+    insights.append(f"Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
 
 # Duration risk
 if "duration_sec" in df.columns and not df.empty:
     avg_duration = df["duration_sec"].mean()
     if not pd.isna(avg_duration) and avg_duration > 10:
-        insights.append("⏳ Long fatigue event duration suggests slow response — improve alerting training.")
+        insights.append("Long fatigue event duration suggests slow response — improve alerting training.")
 
 # Critical hour insight
 if "hour" in df.columns and not df.empty:
@@ -586,7 +695,7 @@ if "hour" in df.columns and not df.empty:
     if len(critical_alerts) > 0:
         critical_pct = (len(critical_alerts) / len(df)) * 100
         if critical_pct > 15:
-            insights.append(f"🌙 **CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
+            insights.append(f"**CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
 
 # High-speed insight
 if col_speed and not df.empty:
@@ -594,93 +703,11 @@ if col_speed and not df.empty:
     if len(high_speed_fatigue) > 0:
         high_speed_pct = (len(high_speed_fatigue) / len(df)) * 100
         if high_speed_pct > 20:
-            insights.append(f"🚀 **HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
+            insights.append(f"**HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
 
-# Output insights
+# Output insights in an elegant format
 for i in insights:
-    st.write("- " + i)
-
-
-# =================== CHAT AI SECTION =====================
-st.subheader("💬 MineVision AI Assistant")
-
-# Initialize session state for chat
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
-
-# Display chat history
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-for message in st.session_state.chat_history:
-    if message['role'] == 'user':
-        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Input for user question
-user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
-
-if st.button("Send", key="send_button"):
-    if user_input:
-        # Add user message to history
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
-        # Process the question and generate response based on data
-        response = ""
-        user_input_lower = user_input.lower()
-        
-        if "operator" in user_input_lower and ("sering" in user_input_lower or "banyak" in user_input_lower or "most" in user_input_lower):
-            if col_operator and not df.empty:
-                top_operator = df[col_operator].value_counts().idxmax()
-                count = df[col_operator].value_counts().iloc[0]
-                response = f"Operator dengan jumlah kejadian ngantuk paling banyak adalah **{top_operator}** dengan **{count}** kejadian."
-            else:
-                response = "Tidak ada data operator yang tersedia."
-        elif "shift" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
-            if col_shift and not df.empty:
-                top_shift = df[col_shift].value_counts().idxmax()
-                count = df[col_shift].value_counts().iloc[0]
-                response = f"Shift dengan jumlah kejadian ngantuk paling banyak adalah **Shift {top_shift}** dengan **{count}** kejadian."
-            else:
-                response = "Tidak ada data shift yang tersedia."
-        elif "jam" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower or "sering" in user_input_lower):
-            if "hour" in df.columns and not df.empty:
-                top_hour = df["hour"].value_counts().idxmax()
-                count = df["hour"].value_counts().iloc[0]
-                response = f"Jam dengan jumlah kejadian ngantuk paling banyak adalah pukul **{top_hour}:00** dengan **{count}** kejadian."
-            else:
-                response = "Tidak ada data jam yang tersedia."
-        elif "fleet" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
-            if col_fleet_type and not df.empty:
-                top_fleet = df[col_fleet_type].value_counts().idxmax()
-                count = df[col_fleet_type].value_counts().iloc[0]
-                response = f"Fleet type dengan jumlah kejadian ngantuk paling banyak adalah **{top_fleet}** dengan **{count}** kejadian."
-            else:
-                response = "Tidak ada data fleet type yang tersedia."
-        elif "total" in user_input_lower and "alert" in user_input_lower:
-            response = f"Total kejadian fatigue alert adalah **{len(df)}**."
-        elif "average" in user_input_lower and ("duration" in user_input_lower or "lama" in user_input_lower):
-            if "duration_sec" in df.columns and not df.empty:
-                avg_duration = df["duration_sec"].mean()
-                response = f"Rata-rata durasi kejadian fatigue adalah **{avg_duration:.2f} detik**."
-            else:
-                response = "Tidak ada data durasi yang tersedia."
-        elif "risk" in user_input_lower and ("category" in user_input_lower or "level" in user_input_lower):
-            if 'risk_category' in df.columns and not df.empty:
-                risk_counts = df['risk_category'].value_counts()
-                response = f"Kategori risiko kelelahan:\n"
-                for category, count in risk_counts.items():
-                    response += f"- {category}: {count} kejadian\n"
-            else:
-                response = "Tidak ada data kategori risiko yang tersedia."
-        else:
-            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, atau kategori risiko."
-        
-        # Add AI response to history
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
-        
-        # Rerun to update the chat display
-        st.rerun()
+    st.markdown(f"- {i}")
 
 
 # ================= FOOTER ===========================
