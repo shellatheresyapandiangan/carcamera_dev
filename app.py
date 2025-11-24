@@ -178,39 +178,47 @@ if 'date' in df.columns:
     # Apply date filter
     df = df[(df['date'] >= date_range[0]) & (df['date'] <= date_range[1])]
 
-# Operator Filter
+# Operator Filter (with search functionality)
 if col_operator:
     all_operators = sorted(df[col_operator].dropna().unique())
+    # Use multiselect with search functionality
     selected_operators = st.sidebar.multiselect(
         f"Select {col_operator.replace('_', ' ').title()} (Leave blank for All)",
         options=all_operators,
-        default=all_operators  # Default to all if none selected
+        default=all_operators,  # Default to all if none selected
+        format_func=lambda x: x  # Format function for better display
     )
     if selected_operators:
         df = df[df[col_operator].isin(selected_operators)]
 
-# Shift Filter
+# Shift Filter (with search functionality)
 if col_shift:
     all_shifts = sorted(df[col_shift].dropna().unique())
+    # Use multiselect with search functionality
     selected_shifts = st.sidebar.multiselect(
         f"Select {col_shift.replace('_', ' ').title()} (Leave blank for All)",
         options=all_shifts,
-        default=all_shifts  # Default to all if none selected
+        default=all_shifts,  # Default to all if none selected
     )
     if selected_shifts:
         df = df[df[col_shift].isin(selected_shifts)]
 
 # Hour Range Filter
 all_hours = sorted(df['hour'].dropna().unique())
-hour_range = st.sidebar.slider(
-    "Select Hour Range (Leave at full range for All)",
-    min_value=int(min(all_hours)) if all_hours.size > 0 else 0,
-    max_value=int(max(all_hours)) if all_hours.size > 0 else 23,
-    value=(int(min(all_hours)) if all_hours.size > 0 else 0, int(max(all_hours)) if all_hours.size > 0 else 23),
-    step=1
-)
-if hour_range != (int(min(all_hours)) if all_hours.size > 0 else 0, int(max(all_hours)) if all_hours.size > 0 else 23):
-    df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
+if len(all_hours) > 0:
+    hour_range = st.sidebar.slider(
+        "Select Hour Range (Leave at full range for All)",
+        min_value=int(min(all_hours)),
+        max_value=int(max(all_hours)),
+        value=(int(min(all_hours)), int(max(all_hours))),
+        step=1
+    )
+    if hour_range != (int(min(all_hours)), int(max(all_hours))):
+        df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
+else:
+    # Handle case where there are no hours
+    st.sidebar.text("No hour data available")
+    hour_range = (0, 23)
 
 
 # =================== KPI METRICS =====================
