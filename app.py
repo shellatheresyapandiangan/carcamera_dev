@@ -2,114 +2,129 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="Fatigue Safety Dashboard", layout="wide", page_icon="😴")
+# =================== CONFIG =====================
+st.set_page_config(
+    page_title="Fatigue Safety Dashboard",
+    page_icon="😴",
+    layout="wide"
+)
 
-st.title("Fatigue Monitoring & Safety Operator Analytics")
+st.title("😴 Fatigue Monitoring Intelligence Dashboard")
 
+# =================== LOAD DATA ======================
 @st.cache_data
 def load_data():
-    path = "/mnt/data/manual fatique.xlsx"
-    data = pd.read_excel(path, sheet_name=None, engine="openpyxl")
+    url = "https://raw.githubusercontent.com/shellatheresyapandiangan/carcamera_dev/main/manual%20fatique.xlsx"
+
+    data = pd.read_excel(url, sheet_name=None, engine="openpyxl")
     df = pd.concat(data.values(), ignore_index=True) if isinstance(data, dict) else data
 
-    df.columns = (
-        df.columns.astype(str)
-        .str.strip()
-        .str.replace(" ", "_")
-        .str.lower()
-    )
+    df.columns = df.columns.astype(str).str.strip().str.lower().str.replace(" ", "_")
 
-    # detect key columns
     col_operator = next((c for c in df.columns if "operator" in c or "driver" in c), None)
     col_shift = next((c for c in df.columns if "shift" in c), None)
+    col_asset = next((c for c in df.columns if "asset" in c or "vehicle" in c or "fleet" in c), None)
 
-    # timestamp
     timestamp_cols = [c for c in df.columns if "gmt" in c or "time" in c or "date" in c]
-    if len(timestamp_cols) >= 2:
-        df["start"] = pd.to_datetime(df[timestamp_cols[0]], errors="coerce")
-        df["end"] = pd.to_datetime(df[timestamp_cols[1]], errors="coerce")
-    df["duration_sec"] = (df["end"] - df["start"]).dt.total_seconds()
-    df["hour"] = df["start"].dt.hour
+    
+    if len(timestamp_cols) >= 1:
+        df["timestamp"] = pd.to_datetime(df[timestamp_cols[0]], errors="coerce")
+        df["hour"] = df["timestamp"].dt.hour
 
-    # Clean shift to 1 or 2
+    # Force Shift into only 1 and 2
     if col_shift:
-        df[col_shift] = df[col_shift].astype(str).str.extract(r"(\d+)").astype(float).astype(int)
+        df[col_shift] = (
+            df[col_shift]
+            .astype(str)
+            .str.extract(r"(\d+)")[0]
+            .astype(float)
+            .fillna(1)
+            .astype(int)
+            .clip(1, 2)
+        )
 
-    return df, col_operator, col_shift
+    # Duration estimation
+    if "hour" in df.columns:
+        df["alert_weight"] = df["hour"].apply(lambda h: 3 if h in [1,2,3,4] else (2 if h in [0,5,6] else 1))
 
-df, col_operator, col_shift = load_data()
+    return df, col_operator, col_shift, col_asset
 
-if col_operator is None or col_shift is None:
-    st.error("Kolom operator atau shift tidak ditemukan. Periksa dataset Anda.")
-    st.stop()
 
-st.success("Data loaded successfully!")
-st.dataframe(df.head(), use_container_width=True)
+df, col_operator, col_shift, col_asset = load_data()
+st.success("📂 Data Loaded Successfully 🎉")
 
-# KPIs
-st.subheader("Key Metrics")
+st.dataframe(df, use_container_width=True)
+
+
+# ================= KEY SAFETY METRICS =================
+st.subheader("📌 Key Safety Metrics")
+
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Events", f"{len(df):,}")
-col2.metric("Unique Operators", df[col_operator].nunique())
-col3.metric("Avg Duration (s)", round(df["duration_sec"].mean(), 1))
-col4.metric("Shifts In Dataset", df[col_shift].nunique())
 
-# Trend by hour
-st.subheader("Trend by Hour")
-fig_hour = px.bar(
+col1.metric("Total Alerts", f"{len(df):,}")
+col2.metric("Unique Operators", df[col_operator].nunique() if col_operator else "-")
+col3.metric("Monitored Assets", df[col_asset].nunique() if col_asset else "-")
+col4.metric("Highest Risk Hour", df["hour"].mode()[0] if "hour" in df else "-")
+
+
+# ================= TREND ANALYTICS =====================
+st.subheader("📈 Fatigue Trend Analysis")
+
+fig_hour = px.line(
     df.groupby("hour").size().reset_index(name="alerts"),
     x="hour", y="alerts",
-    title="Alerts by Hour of Day"
+    markers=True,
+    title="⏰ Fatigue Alerts by Hour"
 )
 st.plotly_chart(fig_hour, use_container_width=True)
 
-# Trend by shift
-st.subheader("Distribution by Shift")
-fig_shift = px.bar(
-    df.groupby(col_shift).size().reset_index(name="alerts"),
-    x=col_shift, y="alerts",
-    title="Alerts by Shift"
-)
-st.plotly_chart(fig_shift, use_container_width=True)
+# Shift
+if col_shift:
+    fig_shift = px.bar(
+        df.groupby(col_shift).size().reset_index(name="alerts"),
+        x=col_shift, y="alerts",
+        title="👷 Fatigue Alerts by Shift"
+    )
+    st.plotly_chart(fig_shift, use_container_width=True)
 
-# Heatmap hour vs shift
-st.subheader("Heatmap: Shift vs Hour")
-heat_df = df.groupby([col_shift, "hour"]).size().reset_index(name="alerts")
-fig_heat = px.density_heatmap(
-    heat_df, x="hour", y=col_shift, z="alerts",
-    title="Fatigue Alerts Heatmap (Hour vs Shift)",
-    color_continuous_scale="reds"
-)
-st.plotly_chart(fig_heat, use_container_width=True)
 
-# Operator ranking
-st.subheader("Operator Safety Performance")
-op_counts = df[col_operator].value_counts().reset_index()
-op_counts.columns = ["operator", "alerts"]
-fig_op = px.bar(
-    op_counts.head(10), x="operator", y="alerts",
-    title="Top 10 Operators – Most Alerts"
-)
-st.plotly_chart(fig_op, use_container_width=True)
-st.table(op_counts.head(10))
+# ================= SAFETY SCORING =====================
+st.subheader("🏆 Operator Risk Index")
 
-# Tambah analisa operator “safe” – operator dengan alerts rendah
-safe_threshold = op_counts["alerts"].quantile(0.25)
-safe_ops = op_counts[op_counts["alerts"] <= safe_threshold]
-st.subheader("Operators with Low Alert Count (Safer)")
-st.table(safe_ops.head(10))
+if col_operator:
+    risk_df = df[col_operator].value_counts().reset_index(names=["operator", "alerts"])
+    risk_df["safety_score"] = round((1 - (risk_df["alerts"] / risk_df["alerts"].max())) * 100)
 
-# Insight text
-st.subheader("Automated Insights")
+    fig_risk = px.bar(
+        risk_df.sort_values("safety_score"),
+        x="safety_score", y="operator",
+        orientation="h",
+        title="🔍 Operator Risk Heatmap (Lower Score = High Risk)"
+    )
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+    st.write(risk_df)
+
+
+# ================= AI INSIGHT ENGINE =====================
+st.subheader("🧠 Automated Safety Insights")
+
 insights = []
-peak_hour = df["hour"].value_counts().idxmax()
-insights.append(f"Peak alert hour: **{peak_hour}:00**.")
-worst_shift = df[col_shift].value_counts().idxmax()
-insights.append(f"Higher alerts during Shift {worst_shift}, review staffing & rest breaks.")
-worst_op = op_counts.iloc[0]["operator"]
-insights.append(f"Operator most at risk: **{worst_op}** — recommend focused safety coaching.")
-for i in insights:
-    st.write("- " + i)
+
+if "hour" in df:
+    peak_hour = df["hour"].value_counts().idxmax()
+    insights.append(f"⚠ Peak fatigue detected at **{peak_hour}:00** — consider microbreak scheduling.")
+
+if col_shift:
+    worst_shift = df[col_shift].value_counts().idxmax()
+    insights.append(f"🔧 Shift **{worst_shift}** shows highest fatigue — review staffing & rest policy.")
+
+if col_operator:
+    worst_operator = df[col_operator].value_counts().idxmax()
+    insights.append(f"🚨 Operator with highest alert: **{worst_operator}** — recommend coaching or rotation.")
+
+for insight in insights:
+    st.write("- " + insight)
 
 st.markdown("---")
-st.caption("Fatigue & Safety Operator Monitoring Dashboard")
+st.caption("© Fatigue Intelligence System — Safety & Predictive Monitoring Platform™")
