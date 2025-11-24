@@ -213,6 +213,19 @@ if st.button("Send", key="send_button"):
             total_alerts = len(df)
             percentage = (len(critical_alerts) / total_alerts) * 100 if total_alerts > 0 else 0
             response = f"Jumlah kejadian fatigue pada jam kritis (2-5 AM) adalah **{len(critical_alerts)}** kejadian ({percentage:.1f}% dari total {total_alerts} kejadian)."
+        elif "madar" in user_input_lower:
+            if col_operator and not df.empty:
+                # Check if "Madar" is an operator in the data
+                madar_data = df[df[col_operator].str.contains('Madar', case=False, na=False)]
+                if not madar_data.empty:
+                    madar_count = len(madar_data)
+                    total_alerts = len(df)
+                    percentage = (madar_count / total_alerts) * 100
+                    response = f"Operator **Madar** tercatat memiliki **{madar_count}** kejadian ngantuk ({percentage:.1f}% dari total {total_alerts} kejadian)."
+                else:
+                    response = "Operator 'Madar' tidak ditemukan dalam data."
+            else:
+                response = "Tidak ada data operator yang tersedia."
         else:
             response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, atau jam kritis."
         
