@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -45,6 +44,10 @@ def load_data():
         df["duration_sec"] = (df["end"] - df["start"]).dt.total_seconds()
         df["hour"] = df["start"].dt.hour
         df["date"] = df["start"].dt.date # Add date column for filtering
+
+        # Ensure shift is integer type
+        if col_shift:
+            df[col_shift] = pd.to_numeric(df[col_shift], errors='coerce').astype('Int64') # Int64 allows NaN
 
         return df, col_operator, col_shift, col_asset
     except FileNotFoundError:
@@ -179,4 +182,3 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.caption("Powered by Streamlit — Mining Fatigue Intelligence System™")
-
