@@ -1,11 +1,9 @@
-
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-import requests
-import json
 
 # =================== CONFIG =====================
 st.set_page_config(
@@ -335,14 +333,51 @@ if col_operator and col_shift:
     )
     st.plotly_chart(fig_op_shift, width="stretch")
 
-# 6. Weekly Trend Analysis (Recovery Pattern)
-if 'week' in df.columns:
-    weekly_trend = df.groupby('week').size().reset_index(name='alerts')
+# 6. Weekly Trend Analysis (Recovery Pattern) - With Color by Shift
+if 'week' in df.columns and col_shift:
+    # Create a new column for the legend
+    df['shift_legend'] = df[col_shift].apply(lambda x: f"Shift {x}")
+    
+    # Group by week and shift
+    weekly_shift_trend = df.groupby(['week', 'shift_legend']).size().reset_index(name='alerts')
+    
     fig_weekly = px.line(
-        weekly_trend,
+        weekly_shift_trend,
         x='week', y='alerts',
-        title="🗓️ Weekly Fatigue Trend (Recovery Pattern)"
+        color='shift_legend',
+        title="🗓️ Weekly Fatigue Trend by Shift (Recovery Pattern)",
+        markers=True
     )
+    # Customize colors for each shift
+    if len(weekly_shift_trend['shift_legend'].unique()) >= 2:
+        # Assign specific colors to shifts (e.g., Shift 1: blue, Shift 2: red)
+        color_map = {}
+        unique_shifts = sorted(weekly_shift_trend['shift_legend'].unique())
+        for i, shift in enumerate(unique_shifts):
+            if i == 0:
+                color_map[shift] = 'blue'
+            elif i == 1:
+                color_map[shift] = 'red'
+            else:
+                color_map[shift] = f'hsl({i*60}, 70%, 50%)'  # Generate different colors for more than 2 shifts
+        
+        fig_weekly.update_traces(marker=dict(size=8))
+        fig_weekly.update_layout(
+            legend_title_text="Shift",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+        # Apply custom colors
+        for trace in fig_weekly.data:
+            if trace.name in color_map:
+                trace.line.color = color_map[trace.name]
+                trace.marker.color = color_map[trace.name]
+    
     st.plotly_chart(fig_weekly, width="stretch")
 
 # 7. Speed Distribution Analysis (Task Complexity)
@@ -561,3 +596,4 @@ if st.button("Send"):
 # ================= FOOTER ===========================
 st.markdown("---")
 st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
+```
