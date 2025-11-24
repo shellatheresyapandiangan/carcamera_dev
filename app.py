@@ -4,6 +4,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import requests
+import json
 
 # =================== CONFIG =====================
 st.set_page_config(
@@ -60,6 +62,30 @@ st.markdown("""
     .high { background-color: #ffebcc; }
     .medium { background-color: #ffffcc; }
     .low { background-color: #e6ffe6; }
+    .chat-container {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 10px;
+        height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+    }
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+        text-align: right;
+    }
+    .ai-message {
+        background-color: #e9ecef;
+        color: black;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+        text-align: left;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -124,7 +150,7 @@ if df.empty:
 
 st.success("Data Loaded Successfully 🎉")
 
-# =================== FILTERS =====================
+# =================== FILTERS (Sidebar) =====================
 st.sidebar.header("Filters")
 # Date Range Filter: Default to "All" if no specific range is selected
 if 'date' in df.columns:
@@ -151,6 +177,41 @@ if 'date' in df.columns:
         date_filtered = True
     # Apply date filter
     df = df[(df['date'] >= date_range[0]) & (df['date'] <= date_range[1])]
+
+# Operator Filter
+if col_operator:
+    all_operators = sorted(df[col_operator].dropna().unique())
+    selected_operators = st.sidebar.multiselect(
+        f"Select {col_operator.replace('_', ' ').title()} (Leave blank for All)",
+        options=all_operators,
+        default=all_operators  # Default to all if none selected
+    )
+    if selected_operators:
+        df = df[df[col_operator].isin(selected_operators)]
+
+# Shift Filter
+if col_shift:
+    all_shifts = sorted(df[col_shift].dropna().unique())
+    selected_shifts = st.sidebar.multiselect(
+        f"Select {col_shift.replace('_', ' ').title()} (Leave blank for All)",
+        options=all_shifts,
+        default=all_shifts  # Default to all if none selected
+    )
+    if selected_shifts:
+        df = df[df[col_shift].isin(selected_shifts)]
+
+# Hour Range Filter
+all_hours = sorted(df['hour'].dropna().unique())
+hour_range = st.sidebar.slider(
+    "Select Hour Range (Leave at full range for All)",
+    min_value=int(min(all_hours)) if all_hours.size > 0 else 0,
+    max_value=int(max(all_hours)) if all_hours.size > 0 else 23,
+    value=(int(min(all_hours)) if all_hours.size > 0 else 0, int(max(all_hours)) if all_hours.size > 0 else 23),
+    step=1
+)
+if hour_range != (int(min(all_hours)) if all_hours.size > 0 else 0, int(max(all_hours)) if all_hours.size > 0 else 23):
+    df = df[(df['hour'] >= hour_range[0]) & (df['hour'] <= hour_range[1])]
+
 
 # =================== KPI METRICS =====================
 st.subheader("📊 Executive Safety Dashboard")
@@ -413,6 +474,80 @@ if col_speed and not df.empty:
 # Output insights
 for i in insights:
     st.write("- " + i)
+
+
+# =================== CHAT AI SECTION =====================
+st.subheader("💬 MineVision AI Assistant")
+
+# Initialize session state for chat
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+
+# Display chat history
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for message in st.session_state.chat_history:
+    if message['role'] == 'user':
+        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Input for user question
+user_input = st.text_input("Ask a question about the fatigue data...")
+
+if st.button("Send"):
+    if user_input:
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        
+        # Process the question and generate response based on data
+        response = ""
+        user_input_lower = user_input.lower()
+        
+        if "operator" in user_input_lower and ("sering" in user_input_lower or "banyak" in user_input_lower or "most" in user_input_lower):
+            if col_operator and not df.empty:
+                top_operator = df[col_operator].value_counts().idxmax()
+                count = df[col_operator].value_counts().iloc[0]
+                response = f"Operator dengan jumlah kejadian ngantuk paling banyak adalah **{top_operator}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data operator yang tersedia."
+        elif "shift" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
+            if col_shift and not df.empty:
+                top_shift = df[col_shift].value_counts().idxmax()
+                count = df[col_shift].value_counts().iloc[0]
+                response = f"Shift dengan jumlah kejadian ngantuk paling banyak adalah **Shift {top_shift}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data shift yang tersedia."
+        elif "jam" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower or "sering" in user_input_lower):
+            if "hour" in df.columns and not df.empty:
+                top_hour = df["hour"].value_counts().idxmax()
+                count = df["hour"].value_counts().iloc[0]
+                response = f"Jam dengan jumlah kejadian ngantuk paling banyak adalah pukul **{top_hour}:00** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data jam yang tersedia."
+        elif "fleet" in user_input_lower and ("banyak" in user_input_lower or "most" in user_input_lower or "highest" in user_input_lower):
+            if col_fleet_type and not df.empty:
+                top_fleet = df[col_fleet_type].value_counts().idxmax()
+                count = df[col_fleet_type].value_counts().iloc[0]
+                response = f"Fleet type dengan jumlah kejadian ngantuk paling banyak adalah **{top_fleet}** dengan **{count}** kejadian."
+            else:
+                response = "Tidak ada data fleet type yang tersedia."
+        elif "total" in user_input_lower and "alert" in user_input_lower:
+            response = f"Total kejadian fatigue alert adalah **{len(df)}**."
+        elif "average" in user_input_lower and ("duration" in user_input_lower or "lama" in user_input_lower):
+            if "duration_sec" in df.columns and not df.empty:
+                avg_duration = df["duration_sec"].mean()
+                response = f"Rata-rata durasi kejadian fatigue adalah **{avg_duration:.2f} detik**."
+            else:
+                response = "Tidak ada data durasi yang tersedia."
+        else:
+            response = "Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, atau durasi."
+        
+        # Add AI response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        
+        # Rerun to update the chat display
+        st.rerun()
 
 
 # ================= FOOTER ===========================
