@@ -674,7 +674,7 @@ if 'week' in df.columns and col_shift:
             )
         )
         # Apply custom colors
-        for trace in fig_weekly.
+        for trace in fig_weekly.data:
             if trace.name in color_map:
                 trace.line.color = color_map[trace.name]
                 trace.marker.color = color_map[trace.name]
