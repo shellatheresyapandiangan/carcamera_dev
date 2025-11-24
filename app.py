@@ -1,4 +1,4 @@
-
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -226,6 +226,20 @@ if st.button("Send", key="send_button"):
                     response = "Operator 'Madar' tidak ditemukan dalam data."
             else:
                 response = "Tidak ada data operator yang tersedia."
+        elif "frms" in user_input_lower or "fatigue risk management" in user_input_lower:
+            response = "Sistem FRMS (Fatigue Risk Management System) yang digunakan adalah pendekatan berbasis data untuk mengidentifikasi, menilai, dan mengendalikan risiko kelelahan. Sistem ini menggabungkan data dari berbagai sumber seperti jam kerja, pola tidur, dan deteksi kelelahan langsung untuk memberikan wawasan dan rekomendasi pencegahan. Dalam konteks mining, FRMS membantu mengurangi kecelakaan dan meningkatkan produktivitas dengan mengelola faktor-faktor risiko kelelahan secara sistematis."
+        elif "intervensi" in user_input_lower or "intervention" in user_input_lower:
+            # Use data to explain intervention rates
+            if col_operator and not df.empty:
+                total_operators = df[col_operator].nunique()
+                total_alerts = len(df)
+                # Assuming each alert might require an intervention
+                avg_interventions_per_operator = total_alerts / total_operators if total_operators > 0 else 0
+                response = f"Berdasarkan data, rata-rata intervensi yang diperlukan per operator adalah sekitar **{avg_interventions_per_operator:.2f}** kejadian. Menurut dokumentasi Wenco, rata-rata hanya ada satu alarm per 22 jam operator, yang menunjukkan tingkat intervensi yang dapat dikelola."
+            else:
+                response = "Data untuk menghitung tingkat intervensi tidak tersedia."
+        elif "implementasi" in user_input_lower or "implementation" in user_input_lower or "resistensi" in user_input_lower or "resistance" in user_input_lower:
+            response = "Berdasarkan dokumentasi Wenco, implementasi FRMS di industri mining menghadapi beberapa tantangan seperti resistensi tenaga kerja (privasi, takut dikenai sanksi), isu teknis (reliabilitas awal, lingkungan keras), dan hambatan manajemen (biaya tinggi, justifikasi ROI). Namun, realitas modern menunjukkan bahwa kekhawatiran seperti 'fleet shutdown' berlebihan, dengan tingkat alarm yang dapat dikelola. Vendor juga telah berkembang, menawarkan dukungan dan model penerapan yang lebih baik."
         else:
             # Improved fallback response with more context
             context_info = []
@@ -243,7 +257,7 @@ if st.button("Send", key="send_button"):
                 context_info.append(f"Kecepatan: hingga {df[col_speed].max() if not df.empty and not df[col_speed].isna().all() else 0} km/h")
             
             context_str = ", ".join(context_info)
-            response = f"Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, atau jam kritis. Data saat ini mencakup: {context_str}."
+            response = f"Pertanyaan Anda tidak dapat diproses. Silakan tanyakan tentang operator, shift, jam, fleet type, total alert, durasi, kategori risiko, kecepatan tinggi, jam kritis, FRMS, intervensi, atau implementasi. Data saat ini mencakup: {context_str}."
         
         # Add AI response to history
         st.session_state.chat_history.append({"role": "assistant", "content": response})
@@ -660,7 +674,7 @@ if 'week' in df.columns and col_shift:
             )
         )
         # Apply custom colors
-        for trace in fig_weekly.data:
+        for trace in fig_weekly.
             if trace.name in color_map:
                 trace.line.color = color_map[trace.name]
                 trace.marker.color = color_map[trace.name]
@@ -818,3 +832,4 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
+```
