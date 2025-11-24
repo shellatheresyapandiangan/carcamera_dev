@@ -117,71 +117,71 @@ st.markdown("""
 # Header
 st.markdown('<div class="main-header"><h1>Safety Analysis and AI - Advanced Fatigue Analysis</h1><p>Proactive Safety Intelligence for Mining Operations</p></div>', unsafe_allow_html=True)
 
-# =================== CHAT AI SECTION =====================
-st.subheader("MineVision AI Assistant")
+# # =================== CHAT AI SECTION =====================
+# st.subheader("MineVision AI Assistant")
 
-# Initialize session state for chat
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
+# # Initialize session state for chat
+# if 'chat_history' not in st.session_state:
+#     st.session_state.chat_history = []
 
-# Display chat history in a fancy box with white background
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-for message in st.session_state.chat_history:
-    if message['role'] == 'user':
-        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# # Display chat history in a fancy box with white background
+# st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+# for message in st.session_state.chat_history:
+#     if message['role'] == 'user':
+#         st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
+#     else:
+#         st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
+# st.markdown('</div>', unsafe_allow_html=True)
 
-# Input for user question
-user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
+# # Input for user question
+# user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
 
-def get_groq_response(prompt):
-    """Function to get response from Groq API"""
-    api_key = "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"  # Your provided token
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
+# def get_groq_response(prompt):
+#     """Function to get response from Groq API"""
+#     api_key = "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"  # Your provided token
+#     headers = {
+#         "Authorization": f"Bearer {api_key}",
+#         "Content-Type": "application/json"
+#     }
     
-    # Construct the full prompt with context
-    full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
+#     # Construct the full prompt with context
+#     full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
     
-    payload = {
-        "model": "llama3-70b-8192",  # Using a powerful model
-        "messages": [
-            {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
-            {"role": "user", "content": full_prompt}
-        ],
-        "temperature": 0.5,
-        "max_tokens": 500,
-        "top_p": 1,
-        "stop": None
-    }
+#     payload = {
+#         "model": "llama3-70b-8192",  # Using a powerful model
+#         "messages": [
+#             {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
+#             {"role": "user", "content": full_prompt}
+#         ],
+#         "temperature": 0.5,
+#         "max_tokens": 500,
+#         "top_p": 1,
+#         "stop": None
+#     }
     
-    try:
-        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
-        response.raise_for_status()
-        result = response.json()
-        return result['choices'][0]['message']['content'].strip()
-    except requests.exceptions.RequestException as e:
-        return f"Error calling Groq API: {str(e)}"
-    except KeyError:
-        return "Received unexpected response from Groq API."
+#     try:
+#         response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+#         response.raise_for_status()
+#         result = response.json()
+#         return result['choices'][0]['message']['content'].strip()
+#     except requests.exceptions.RequestException as e:
+#         return f"Error calling Groq API: {str(e)}"
+#     except KeyError:
+#         return "Received unexpected response from Groq API."
 
-if st.button("Send", key="send_button"):
-    if user_input:
-        # Add user message to history
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
+# if st.button("Send", key="send_button"):
+#     if user_input:
+#         # Add user message to history
+#         st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-        # Get response from Groq API
-        response = get_groq_response(user_input)
+#         # Get response from Groq API
+#         response = get_groq_response(user_input)
         
-        # Add AI response to history
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
+#         # Add AI response to history
+#         st.session_state.chat_history.append({"role": "assistant", "content": response})
         
-        # Rerun to update the chat display
-        st.rerun()
+#         # Rerun to update the chat display
+#         st.rerun()
 
 
 # =================== LOAD DATA ======================
@@ -671,28 +671,28 @@ if col_operator:
             st.info(f"Operator {op_name} fatigue risk is within acceptable range ({op_pct:.1f}%).")
 
 
-# =================== FATIGUE RISK MATRIX =====================
-# Moved to sidebar
-with st.sidebar:
-    st.subheader("Fatigue Risk Matrix")
+# # =================== FATIGUE RISK MATRIX =====================
+# # Moved to sidebar
+# with st.sidebar:
+#     st.subheader("Fatigue Risk Matrix")
     
-    risk_matrix_data = [
-        ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
-        ["Moderate fatigue + decline haul road", "Serious injury", "High"],
-        ["High fatigue + low-risk task", "Minor injury", "Medium"],
-        ["Low fatigue + non-hazard task", "No injury", "Low"]
-    ]
+#     risk_matrix_data = [
+#         ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
+#         ["Moderate fatigue + decline haul road", "Serious injury", "High"],
+#         ["High fatigue + low-risk task", "Minor injury", "Medium"],
+#         ["Low fatigue + non-hazard task", "No injury", "Low"]
+#     ]
     
-    risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
+#     risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
     
-    # Display risk matrix as a styled table
-    html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
-    for _, row in risk_df.iterrows():
-        risk_class = row["Risk Tier"].lower()
-        html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
-    html_string += '</tbody></table>'
+#     # Display risk matrix as a styled table
+#     html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
+#     for _, row in risk_df.iterrows():
+#         risk_class = row["Risk Tier"].lower()
+#         html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
+#     html_string += '</tbody></table>'
     
-    st.markdown(html_string, unsafe_allow_html=True)
+#     st.markdown(html_string, unsafe_allow_html=True)
 
 
 # =================== AI INSIGHT ENGINE =====================
