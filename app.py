@@ -861,4 +861,4 @@ for i in insights:
 
 # ================= FOOTER ===========================
 st.markdown("---")
-st.markdown('<div class="footer">⛏️ MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com | 🗺️ Advanced Mining Intelligence Platform</div>', unsafe_allow_html=True
+st.markdown('<div class="footer">⛏️ MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com | 🗺️ Advanced Mining Intelligence Platform</div>', unsafe_allow_html=True)
