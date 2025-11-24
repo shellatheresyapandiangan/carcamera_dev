@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -16,12 +17,7 @@ st.title("😴 Fatigue Monitoring Intelligence Dashboard")
 @st.cache_data
 def load_data():
     # Load data from the uploaded file
-    # The path should point to where the uploaded file is stored in your environment
-    # For this example, I'll assume the file is named 'manual fatique.xlsx' and located in the current directory
-    # You might need to adjust the path based on your specific setup
     try:
-        # Replace 'manual fatique.xlsx' with the actual path to your file
-        # If using Streamlit's file uploader, you would pass the file buffer here
         df = pd.read_excel('manual fatique.xlsx', sheet_name=None, engine="openpyxl")
         
         # If the file has multiple sheets, concatenate them
@@ -36,8 +32,6 @@ def load_data():
         col_asset = next((c for c in df.columns if "asset" in c or "vehicle" in c or "fleet" in c), None)
 
         # detect timestamps (using the actual column names from the provided file)
-        # The columns are "(gmt+8 / wita)" and "(gmt+8 / wita)_2" (assuming the second one is the end time)
-        # Let's find columns that match the pattern
         start_time_cols = [c for c in df.columns if "gmt" in c.lower() and "wita" in c.lower()]
         # Assuming the first one is start and the second is end
         if len(start_time_cols) >= 2:
@@ -57,7 +51,7 @@ def load_data():
         st.error("File 'manual fatique.xlsx' not found. Please check the file path.")
         return pd.DataFrame(), None, None, None
     except Exception as e:
-        st.error(f"Error loading data: {e}")
+        st.error(f"Error loading  {e}")
         return pd.DataFrame(), None, None, None
 
 
@@ -67,8 +61,6 @@ if df.empty:
     st.stop()
 
 st.success("Data Loaded Successfully 🎉")
-
-st.dataframe(df, width="stretch")
 
 # =================== FILTERS =====================
 st.sidebar.header("Filters")
@@ -187,3 +179,5 @@ for i in insights:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.caption("Powered by Streamlit — Mining Fatigue Intelligence System™")
+
+```
