@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -15,29 +14,66 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional look with white canvas
+# Force light theme for entire app
 st.markdown("""
 <style>
-    .main-header {
-        background: linear-gradient(135deg, #003366, #0066cc);
-        padding: 25px;
-        border-radius: 15px;
-        color: white;
-        text-align: center;
-        margin-bottom: 25px;
-        box-shadow: 0 8px 32px rgba(0, 51, 102, 0.3);
-        border: 2px solid #ffffff;
+    /* Force white background for entire Streamlit app */
+    .stApp {
+        background-color: white !important;
+        color: #333333 !important;
     }
+    
+    /* Remove all background colors from Streamlit containers */
+    .css-1d391kg, .css-1v3fvcr, .css-1l02z7j, .css-1n7v2ny, .css-145kmo2, .css-1y4p8pa {
+        background-color: white !important;
+        border: none !important;
+    }
+    
+    /* Ensure text is readable */
+    body, p, div, span, h1, h2, h3, h4, h5, h6 {
+        color: #333333 !important;
+    }
+    
+    /* Fix Plotly chart background */
+    .plotly-graph-div {
+        background-color: white !important;
+    }
+    
+    /* Header styling - no background, clean professional look */
+    .main-header {
+        padding: 25px;
+        margin-bottom: 25px;
+        text-align: center;
+        border-bottom: 2px solid #003366;
+        color: #003366;
+        font-weight: bold;
+    }
+    
+    .main-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 5px;
+        color: #003366;
+    }
+    
+    .main-header p {
+        font-size: 1.2em;
+        color: #666666;
+        margin-top: 10px;
+    }
+    
+    /* Metric card styling */
     .metric-card {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        background: white;
         padding: 20px;
         border-radius: 12px;
         border-left: 6px solid #003366;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid #e1e8f0;
     }
+    
+    /* Insight box styling */
     .insight-box {
-        background: linear-gradient(145deg, #ffffff, #fafafa);
+        background: white;
         padding: 20px;
         border-radius: 12px;
         border-left: 6px solid #ff6b6b;
@@ -45,118 +81,47 @@ st.markdown("""
         box-shadow: 0 4px 20px rgba(255, 107, 107, 0.1);
         border: 1px solid #ffe0e0;
     }
+    
+    /* Footer styling */
     .footer {
         text-align: center;
         padding: 25px;
         color: #666666;
         font-size: 0.95em;
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        border-radius: 12px;
-        margin-top: 30px;
-        border: 1px solid #e1e8f0;
-    }
-    .risk-matrix {
-        border-collapse: collapse;
-        width: 100%;
-        margin: 20px 0;
         background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-top: 1px solid #e1e8f0;
+        margin-top: 30px;
     }
-    .risk-matrix th, .risk-matrix td {
-        border: 1px solid #ddd;
-        padding: 12px;
-        text-align: left;
-    }
-    .risk-matrix th {
-        background: linear-gradient(145deg, #f0f8ff, #e6f3ff);
-        font-weight: bold;
-        color: #003366;
-    }
-    .critical { background-color: #ffebee; }
-    .high { background-color: #fff3e0; }
-    .medium { background-color: #fffde7; }
-    .low { background-color: #e8f5e8; }
-    .chat-container {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        padding: 20px;
-        border-radius: 15px;
-        height: 400px;
-        overflow-y: auto;
-        margin-top: 20px;
-        border: 2px solid #e1e8f0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    .user-message {
-        background: linear-gradient(145deg, #e3f2fd, #bbdefb);
-        color: #003366;
-        padding: 15px;
-        border-radius: 15px;
-        margin: 12px 0;
-        text-align: right;
-        border: 1px solid #90caf9;
-        box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
-    }
-    .ai-message {
-        background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
-        color: #333333;
-        padding: 15px;
-        border-radius: 15px;
-        margin: 12px 0;
-        text-align: left;
-        border: 1px solid #bdbdbd;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .chat-box {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        border: 2px solid #e1e8f0;
-        border-radius: 12px;
-        padding: 15px;
-        margin-top: 15px;
-        width: 100%;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    }
-    .user-question {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
-        border: 2px solid #e1e8f0;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    }
-    .ai-answer {
-        background: linear-gradient(145deg, #f8f9fa, #f0f0f0);
-        border: 2px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    }
-    .main-container {
-        background-color: white;
-        min-height: 100vh;
-        padding: 20px;
-    }
+    
+    /* Chart container */
     .chart-container {
-        background: linear-gradient(145deg, #ffffff, #fafafa);
+        background: white;
         padding: 25px;
         border-radius: 15px;
         margin: 15px 0;
         box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
         border: 1px solid #e1e8f0;
     }
+    
+    /* Subheader styling */
     .subheader-style {
-        background: linear-gradient(145deg, #f8f9fa, #ffffff);
         padding: 15px 20px;
         border-radius: 12px;
         margin: 20px 0 25px 0;
         border-left: 4px solid #003366;
         box-shadow: 0 4px 15px rgba(0, 51, 102, 0.1);
         border: 1px solid #e1e8f0;
+        background: white;
     }
+    
+    .subheader-style h2 {
+        color: #003366;
+        margin: 0;
+    }
+    
+    /* Insight card */
     .insight-card {
-        background: linear-gradient(145deg, #ffffff, #f9f9f9);
+        background: white;
         padding: 20px;
         border-radius: 12px;
         margin: 10px 0;
@@ -164,8 +129,10 @@ st.markdown("""
         box-shadow: 0 3px 15px rgba(255, 107, 107, 0.1);
         border: 1px solid #ffe0e0;
     }
+    
+    /* Metric container */
     .metric-container {
-        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        background: white;
         padding: 20px;
         border-radius: 15px;
         margin: 10px;
@@ -175,18 +142,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Header with fancy design and icon
+# Header - Professional, no background, no icons
 st.markdown("""
 <div class="main-header">
-    <h1>⛏️ MineVision AI - Advanced Fatigue Analytics</h1>
-    <p style="font-size: 1.2em; margin-top: 10px;">Proactive Safety Intelligence for Mining Operations</p>
-    <div style="display: flex; justify-content: center; align-items: center; margin-top: 15px; gap: 20px;">
-        <span style="font-size: 2em;">🗺️</span>
-        <span style="font-size: 2em;">📊</span>
-        <span style="font-size: 2em;">🛡️</span>
-        <span style="font-size: 2em;">🔍</span>
-        <span style="font-size: 2em;">🎯</span>
-    </div>
+    <h1>MineVision AI - Advanced Fatigue Analytics</h1>
+    <p>Proactive Safety Intelligence for Mining Operations</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -318,7 +278,7 @@ if df.empty:
 st.success("Data Loaded Successfully")
 
 # =================== FILTERS (Sidebar) =====================
-st.sidebar.header("🔍 Filters")
+st.sidebar.header("Filters")
 
 # Year Filter
 if 'year' in df.columns:
@@ -423,7 +383,7 @@ else:
 
 
 # =================== FATIGUE RISK CATEGORIZATION =====================
-st.markdown('<div class="subheader-style"><h2>⚠️ Fatigue Risk Categorization</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Fatigue Risk Categorization</h2></div>', unsafe_allow_html=True)
 
 # Define risk categories based on the provided matrix
 if col_speed and "hour" in df.columns:
@@ -512,7 +472,7 @@ if col_speed and "hour" in df.columns:
 
 
 # =================== KPI METRICS =====================
-st.markdown('<div class="subheader-style"><h2>📊 Executive Safety Dashboard</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Executive Safety Dashboard</h2></div>', unsafe_allow_html=True)
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -538,7 +498,7 @@ with col4:
 
 
 # =================== TREND ANALYTICS =====================
-st.markdown('<div class="subheader-style"><h2>📈 Fatigue Trend Analysis</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Fatigue Trend Analysis</h2></div>', unsafe_allow_html=True)
 
 # Hourly
 fig_hour = px.bar(
@@ -594,7 +554,7 @@ if col_operator:
 
 
 # =================== NEW CHARTS (Based on Mining Fatigue Factors) =====================
-st.markdown('<div class="subheader-style"><h2>🔍 Advanced Mining Fatigue Analytics</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Advanced Mining Fatigue Analytics</h2></div>', unsafe_allow_html=True)
 
 # 1. Day of Week Analysis (Workload Pattern)
 if 'day_of_week' in df.columns:
@@ -725,7 +685,7 @@ if col_speed:
 
 
 # =================== INSIGHTS BY ADVANCED ANALYTICS =====================
-st.markdown('<div class="subheader-style"><h2>💡 Insights by Advanced Analytics</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Insights by Advanced Analytics</h2></div>', unsafe_allow_html=True)
 
 # 1. Critical Hour Analysis (2-5 AM)
 critical_hours = [2, 3, 4, 5]
@@ -808,7 +768,7 @@ if col_operator:
 
 
 # =================== AI INSIGHT ENGINE =====================
-st.markdown('<div class="subheader-style"><h2>🤖 Automated Insight Summary</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader-style"><h2>Automated Insight Summary</h2></div>', unsafe_allow_html=True)
 
 # Create a more elegant summary
 insights = []
@@ -818,25 +778,25 @@ if "hour" in df.columns and not df.empty:
     peak_hour = df["hour"].value_counts().idxmax()
     critical_hours = [2, 3, 4, 5]
     if peak_hour in critical_hours:
-        insights.append(f"⚠️ Most fatigue risk occurs at **{peak_hour}:00** — during critical circadian low period (2-5 AM). Consider enhanced monitoring.")
+        insights.append(f"Most fatigue risk occurs at **{peak_hour}:00** — during critical circadian low period (2-5 AM). Consider enhanced monitoring.")
     else:
         insights.append(f"Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
 
 # Risk shift
 if col_shift and not df.empty:
     worst_shift = df[col_shift].value_counts().idxmax()
-    insights.append(f"👷 Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
+    insights.append(f"Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
 
 # Worst operator
 if col_operator and not df.empty:
     worst_operator = df[col_operator].value_counts().idxmax()
-    insights.append(f"⚠️ Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
+    insights.append(f"Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
 
 # Duration risk
 if "duration_sec" in df.columns and not df.empty:
     avg_duration = df["duration_sec"].mean()
     if not pd.isna(avg_duration) and avg_duration > 10:
-        insights.append("⏳ Long fatigue event duration suggests slow response — improve alerting training.")
+        insights.append("Long fatigue event duration suggests slow response — improve alerting training.")
 
 # Critical hour insight
 if "hour" in df.columns and not df.empty:
@@ -844,7 +804,7 @@ if "hour" in df.columns and not df.empty:
     if len(critical_alerts) > 0:
         critical_pct = (len(critical_alerts) / len(df)) * 100
         if critical_pct > 15:
-            insights.append(f"🌙 **CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
+            insights.append(f"**CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
 
 # High-speed insight
 if col_speed and not df.empty:
@@ -852,7 +812,7 @@ if col_speed and not df.empty:
     if len(high_speed_fatigue) > 0:
         high_speed_pct = (len(high_speed_fatigue) / len(df)) * 100
         if high_speed_pct > 20:
-            insights.append(f"🚀 **HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
+            insights.append(f"**HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
 
 # Output insights in an elegant format
 for i in insights:
@@ -861,4 +821,4 @@ for i in insights:
 
 # ================= FOOTER ===========================
 st.markdown("---")
-st.markdown('<div class="footer">⛏️ MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com | 🗺️ Advanced Mining Intelligence Platform</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
