@@ -1,6 +1,3 @@
-Okay, saya akan menyertakan script awal Anda, memperbaikinya, dan menambahkan fitur analisis baru berdasarkan data yang tersedia dan konsep manajemen risiko kelelahan dari dokumen Wenco, serta memperbaiki filter tanggal agar jika tidak difilter maka menampilkan semua data.
-
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -462,4 +459,3 @@ with value_cols[2]:
 # ================= FOOTER ===========================
 st.markdown("---")
 st.markdown('<div class="footer">MineVision AI - Transforming Mining Safety with Intelligent Analytics | Contact: sales@minevision-ai.com</div>', unsafe_allow_html=True)
-```
