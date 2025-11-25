@@ -344,10 +344,10 @@ if col_speed and "hour" in df.columns:
         labels={'x': 'Risk Category', 'y': 'Number of Alerts'},
         color=risk_counts.index,
         color_discrete_map={
-            'Critical': '#F6B1CE',  # Pink pastel
-            'High': '#1581BF',     # Teal
-            'Medium': '#3DB6B1',   # Turquoise
-            'Low': '#CCE5CF'       # Mint
+            'Critical': '#1581BF',  # Biru gelap
+            'High': '#1581BF',     # Biru gelap
+            'Medium': '#1581BF',   # Biru gelap
+            'Low': '#1581BF'       # Biru gelap
         }
     )
     fig_risk.update_layout(
@@ -390,7 +390,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + high-speed haul road",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="#F6B1CE",
+                bgcolor="#1581BF",
                 opacity=0.8
             )
         elif cat == 'High':
@@ -410,7 +410,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + low-risk task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="#3DB6B1",
+                bgcolor="#1581BF",
                 opacity=0.8
             )
         elif cat == 'Low':
@@ -420,7 +420,7 @@ if col_speed and "hour" in df.columns:
                 text="Low fatigue + non-hazard task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="#CCE5CF",
+                bgcolor="#1581BF",
                 opacity=0.8
             )
     
@@ -464,7 +464,7 @@ fig_hour = px.bar(
     x="hour", y="alerts",
     title="Fatigue Alerts by Hour"
 )
-fig_hour.update_traces(marker_color='#1581BF')  # Use teal from palette
+fig_hour.update_traces(marker_color='#1581BF')  # Biru gelap
 fig_hour.update_layout(
     plot_bgcolor='#e6f2ff',
     paper_bgcolor='#e6f2ff',
@@ -494,7 +494,7 @@ if col_shift:
     )
     # Force the x-axis (shift) to be categorical to avoid decimal labels
     fig_shift.update_xaxes(type='category')
-    fig_shift.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
+    fig_shift.update_traces(marker_color='#1581BF')  # Biru gelap
     fig_shift.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -522,7 +522,7 @@ if col_shift:
         heat_df,
         x="hour", y=col_shift, z="alerts",
         title="Heatmap Fatigue by Shift & Hour",
-        color_continuous_scale=["#CCE5CF", "#3DB6B1", "#1581BF", "#F6B1CE"]  # Use palette colors
+        color_continuous_scale=["#1581BF", "#1581BF", "#1581BF"]  # Semua warna biru gelap
     )
     # Force the y-axis (shift) to be categorical to avoid decimal labels
     fig_heat.update_yaxes(type='category')
@@ -556,7 +556,7 @@ if col_operator:
         x="operator", y="alerts",
         title="Top Fatigue Alerts by Operator"
     )
-    fig_operator.update_traces(marker_color='#F6B1CE')  # Use pink pastel from palette
+    fig_operator.update_traces(marker_color='#1581BF')  # Biru gelap
     fig_operator.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -589,7 +589,7 @@ if 'day_of_week' in df.columns:
         x=day_counts.index, y=day_counts.values,
         title="Fatigue Alerts by Day of Week (Workload Pattern)"
     )
-    fig_day.update_traces(marker_color='#1581BF')  # Use teal from palette
+    fig_day.update_traces(marker_color='#1581BF')  # Biru gelap
     fig_day.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -619,7 +619,7 @@ if col_fleet_type:
         x=col_fleet_type, y="alerts",
         title="Fatigue Alerts by Fleet Type (Task Complexity)"
     )
-    fig_fleet.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
+    fig_fleet.update_traces(marker_color='#1581BF')  # Biru gelap
     fig_fleet.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -651,7 +651,7 @@ if col_speed and "hour" in df.columns:
             title="Speed vs Hour of Day (Fatigue Events) - Environmental Factor",
             hover_data=[col_operator, col_asset]
         )
-        fig_speed_hour.update_traces(marker_color='#F6B1CE')  # Use pink pastel from palette
+        fig_speed_hour.update_traces(marker_color='#1581BF')  # Biru gelap
         fig_speed_hour.update_layout(
             plot_bgcolor='#e6f2ff',
             paper_bgcolor='#e6f2ff',
@@ -680,7 +680,7 @@ if "duration_sec" in df.columns and "hour" in df.columns:
         title="Fatigue Event Duration vs Hour of Day (Physiological Response)",
         hover_data=[col_operator, col_asset]
     )
-    fig_duration_hour.update_traces(marker_color='#1581BF')  # Use teal from palette
+    fig_duration_hour.update_traces(marker_color='#1581BF')  # Biru gelap
     fig_duration_hour.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -709,7 +709,7 @@ if col_operator and col_shift:
         x=col_operator, y="alerts", color=col_shift,
         title="Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
     )
-    # Use palette colors for different shifts
+    # Use biru gelap for all shifts
     fig_op_shift.update_layout(
         plot_bgcolor='#e6f2ff',
         paper_bgcolor='#e6f2ff',
@@ -725,7 +725,7 @@ if col_operator and col_shift:
                 line=dict(color='black', width=1)
             )
         ],
-        colorway=['#F6B1CE', '#1581BF', '#3DB6B1', '#CCE5CF']  # Assign palette colors to shifts
+        colorway=['#1581BF']  # Semua warna biru gelap
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_op_shift, use_container_width=True)
@@ -746,14 +746,13 @@ if 'week' in df.columns and col_shift:
         title="Weekly Fatigue Trend by Shift (Recovery Pattern)",
         markers=True
     )
-    # Customize colors for each shift using palette
+    # Customize colors for each shift using biru gelap
     if len(weekly_shift_trend['shift_legend'].unique()) >= 2:
-        # Assign specific colors to shifts from palette
+        # Assign biru gelap to all shifts
         color_map = {}
         unique_shifts = sorted(weekly_shift_trend['shift_legend'].unique())
-        palette_colors = ['#F6B1CE', '#1581BF', '#3DB6B1', '#CCE5CF']
         for i, shift in enumerate(unique_shifts):
-            color_map[shift] = palette_colors[i % len(palette_colors)]
+            color_map[shift] = '#1581BF'
         
         fig_weekly.update_traces(marker=dict(size=8))
         fig_weekly.update_layout(
@@ -802,7 +801,7 @@ if col_speed:
             title="Speed Distribution (Task Complexity Indicator)",
             nbins=20
         )
-        fig_speed_dist.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
+        fig_speed_dist.update_traces(marker_color='#1581BF')  # Biru gelap
         fig_speed_dist.update_layout(
             plot_bgcolor='#e6f2ff',
             paper_bgcolor='#e6f2ff',
