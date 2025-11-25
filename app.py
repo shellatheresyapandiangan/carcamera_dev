@@ -14,32 +14,27 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Force light theme for entire app
+# Force light theme and blue aesthetic
 st.markdown("""
 <style>
-    /* Force white background for entire Streamlit app */
+    /* Force entire app to light mode with soft blue theme */
     .stApp {
         background-color: white !important;
         color: #333333 !important;
     }
     
-    /* Remove all background colors from Streamlit containers */
+    /* Override all Streamlit containers to use light blue */
     .css-1d391kg, .css-1v3fvcr, .css-1l02z7j, .css-1n7v2ny, .css-145kmo2, .css-1y4p8pa {
-        background-color: white !important;
+        background-color: #f0f8ff !important; /* Soft sky blue */
         border: none !important;
     }
     
-    /* Ensure text is readable */
+    /* Ensure text is readable on light blue */
     body, p, div, span, h1, h2, h3, h4, h5, h6 {
         color: #333333 !important;
     }
     
-    /* Fix Plotly chart background */
-    .plotly-graph-div {
-        background-color: #faf9f6 !important;
-    }
-    
-    /* Header styling - no background, clean professional look */
+    /* Header styling - clean, no background, but with blue accent */
     .main-header {
         padding: 25px;
         margin-bottom: 25px;
@@ -66,14 +61,14 @@ st.markdown("""
         padding: 20px;
         border-radius: 12px;
         border-left: 6px solid #003366;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8f0;
-        background: #faf9f6; /* Cream milk background */
+        box-shadow: 0 4px 20px rgba(0, 51, 102, 0.1);
+        border: 1px solid #cce5ff;
+        background: #e6f2ff; /* Lighter blue for cards */
     }
     
     /* Insight box styling */
     .insight-box {
-        background: #faf9f6;
+        background: #e6f2ff;
         padding: 20px;
         border-radius: 12px;
         border-left: 6px solid #ff6b6b;
@@ -89,18 +84,18 @@ st.markdown("""
         color: #666666;
         font-size: 0.95em;
         background: white;
-        border-top: 1px solid #e1e8f0;
+        border-top: 1px solid #cce5ff;
         margin-top: 30px;
     }
     
-    /* Chart container - cream background with fancy shadow */
+    /* Chart container - light blue background with fancy shadow */
     .chart-container {
-        background: #faf9f6;
+        background: #e6f2ff;
         padding: 25px;
         border-radius: 15px;
         margin: 15px 0;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e1e8f0;
+        box-shadow: 0 6px 25px rgba(0, 51, 102, 0.1);
+        border: 1px solid #cce5ff;
     }
     
     /* Subheader styling */
@@ -110,8 +105,8 @@ st.markdown("""
         margin: 20px 0 25px 0;
         border-left: 4px solid #003366;
         box-shadow: 0 4px 15px rgba(0, 51, 102, 0.1);
-        border: 1px solid #e1e8f0;
-        background: #faf9f6;
+        border: 1px solid #cce5ff;
+        background: #e6f2ff;
     }
     
     .subheader-style h2 {
@@ -121,7 +116,7 @@ st.markdown("""
     
     /* Insight card */
     .insight-card {
-        background: #faf9f6;
+        background: #e6f2ff;
         padding: 20px;
         border-radius: 12px;
         margin: 10px 0;
@@ -135,19 +130,19 @@ st.markdown("""
         padding: 20px;
         border-radius: 15px;
         margin: 10px;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8f0;
-        background: #faf9f6;
+        box-shadow: 0 6px 25px rgba(0, 51, 102, 0.1);
+        border: 1px solid #cce5ff;
+        background: #e6f2ff;
     }
     
-    /* Sidebar filter styling - cream background */
+    /* Sidebar filter styling - light blue background */
     .css-1d391kg {
-        background: #faf9f6 !important;
+        background: #e6f2ff !important;
     }
     
     /* Fancy chart styling */
     .js-plotly-plot .plotly .main-svg {
-        background: #faf9f6 !important;
+        background: #e6f2ff !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -421,8 +416,8 @@ if col_speed and "hour" in df.columns:
         xaxis_title="Risk Category",
         yaxis_title="Number of Alerts",
         height=400,
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     # Add legend to explain each category
     fig_risk.update_layout(
@@ -519,8 +514,8 @@ fig_hour = px.bar(
     title="Fatigue Alerts by Hour"
 )
 fig_hour.update_layout(
-    plot_bgcolor='#faf9f6',
-    paper_bgcolor='#faf9f6'
+    plot_bgcolor='#e6f2ff',
+    paper_bgcolor='#e6f2ff'
 )
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 st.plotly_chart(fig_hour, use_container_width=True)
@@ -536,8 +531,8 @@ if col_shift:
     # Force the x-axis (shift) to be categorical to avoid decimal labels
     fig_shift.update_xaxes(type='category')
     fig_shift.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_shift, use_container_width=True)
@@ -555,8 +550,8 @@ if col_shift:
     # Force the y-axis (shift) to be categorical to avoid decimal labels
     fig_heat.update_yaxes(type='category')
     fig_heat.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_heat, use_container_width=True)
@@ -573,8 +568,8 @@ if col_operator:
         title="Top Fatigue Alerts by Operator"
     )
     fig_operator.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_operator, use_container_width=True)
@@ -593,8 +588,8 @@ if 'day_of_week' in df.columns:
         title="Fatigue Alerts by Day of Week (Workload Pattern)"
     )
     fig_day.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_day, use_container_width=True)
@@ -610,8 +605,8 @@ if col_fleet_type:
         title="Fatigue Alerts by Fleet Type (Task Complexity)"
     )
     fig_fleet.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_fleet, use_container_width=True)
@@ -629,8 +624,8 @@ if col_speed and "hour" in df.columns:
             hover_data=[col_operator, col_asset]
         )
         fig_speed_hour.update_layout(
-            plot_bgcolor='#faf9f6',
-            paper_bgcolor='#faf9f6'
+            plot_bgcolor='#e6f2ff',
+            paper_bgcolor='#e6f2ff'
         )
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.plotly_chart(fig_speed_hour, use_container_width=True)
@@ -645,8 +640,8 @@ if "duration_sec" in df.columns and "hour" in df.columns:
         hover_data=[col_operator, col_asset]
     )
     fig_duration_hour.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_duration_hour, use_container_width=True)
@@ -661,8 +656,8 @@ if col_operator and col_shift:
         title="Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
     )
     fig_op_shift.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_op_shift, use_container_width=True)
@@ -714,8 +709,8 @@ if 'week' in df.columns and col_shift:
                 trace.marker.color = color_map[trace.name]
     
     fig_weekly.update_layout(
-        plot_bgcolor='#faf9f6',
-        paper_bgcolor='#faf9f6'
+        plot_bgcolor='#e6f2ff',
+        paper_bgcolor='#e6f2ff'
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_weekly, use_container_width=True)
@@ -732,8 +727,8 @@ if col_speed:
             nbins=20
         )
         fig_speed_dist.update_layout(
-            plot_bgcolor='#faf9f6',
-            paper_bgcolor='#faf9f6'
+            plot_bgcolor='#e6f2ff',
+            paper_bgcolor='#e6f2ff'
         )
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.plotly_chart(fig_speed_dist, use_container_width=True)
