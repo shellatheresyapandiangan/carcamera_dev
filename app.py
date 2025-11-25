@@ -155,73 +155,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# # =================== CHAT AI SECTION =====================
-# st.subheader("MineVision AI Assistant")
-
-# # Initialize session state for chat
-# if 'chat_history' not in st.session_state:
-#     st.session_state.chat_history = []
-
-# # Display chat history in a fancy box with white background
-# st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-# for message in st.session_state.chat_history:
-#     if message['role'] == 'user':
-#         st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
-#     else:
-#         st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
-# st.markdown('</div>', unsafe_allow_html=True)
-
-# # Input for user question
-# user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
-
-# def get_groq_response(prompt):
-#     """Function to get response from Groq API"""
-#     api_key = "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"  # Your provided token
-#     headers = {
-#         "Authorization": f"Bearer {api_key}",
-#         "Content-Type": "application/json"
-#     }
-    
-#     # Construct the full prompt with context
-#     full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
-    
-#     payload = {
-#         "model": "llama3-70b-8192",  # Using a powerful model
-#         "messages": [
-#             {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
-#             {"role": "user", "content": full_prompt}
-#         ],
-#         "temperature": 0.5,
-#         "max_tokens": 500,
-#         "top_p": 1,
-#         "stop": None
-#     }
-    
-#     try:
-#         response = requests.post("https://api.groq.com/openai/v1/chat/completions  ", headers=headers, json=payload)
-#         response.raise_for_status()
-#         result = response.json()
-#         return result['choices'][0]['message']['content'].strip()
-#     except requests.exceptions.RequestException as e:
-#         return f"Error calling Groq API: {str(e)}"
-#     except KeyError:
-#         return "Received unexpected response from Groq API."
-
-# if st.button("Send", key="send_button"):
-#     if user_input:
-#         # Add user message to history
-#         st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
-#         # Get response from Groq API
-#         response = get_groq_response(user_input)
-        
-#         # Add AI response to history
-#         st.session_state.chat_history.append({"role": "assistant", "content": response})
-        
-#         # Rerun to update the chat display
-#         st.rerun()
-
-
 # =================== LOAD DATA ======================
 @st.cache_data
 def load_data():
@@ -410,14 +343,32 @@ if col_speed and "hour" in df.columns:
         title="Fatigue Risk Categories Distribution",
         labels={'x': 'Risk Category', 'y': 'Number of Alerts'},
         color=risk_counts.index,
-        color_discrete_map={'Critical': 'red', 'High': 'orange', 'Medium': 'yellow', 'Low': 'green'}
+        color_discrete_map={
+            'Critical': '#F6B1CE',  # Pink pastel
+            'High': '#1581BF',     # Teal
+            'Medium': '#3DB6B1',   # Turquoise
+            'Low': '#CCE5CF'       # Mint
+        }
     )
     fig_risk.update_layout(
         xaxis_title="Risk Category",
         yaxis_title="Number of Alerts",
         height=400,
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        # Add black border to make it stand out from background
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     # Add legend to explain each category
     fig_risk.update_layout(
@@ -439,7 +390,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + high-speed haul road",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="red",
+                bgcolor="#F6B1CE",
                 opacity=0.8
             )
         elif cat == 'High':
@@ -449,7 +400,7 @@ if col_speed and "hour" in df.columns:
                 text="Moderate fatigue + decline haul road",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="orange",
+                bgcolor="#1581BF",
                 opacity=0.8
             )
         elif cat == 'Medium':
@@ -459,7 +410,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + low-risk task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="yellow",
+                bgcolor="#3DB6B1",
                 opacity=0.8
             )
         elif cat == 'Low':
@@ -469,7 +420,7 @@ if col_speed and "hour" in df.columns:
                 text="Low fatigue + non-hazard task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="green",
+                bgcolor="#CCE5CF",
                 opacity=0.8
             )
     
@@ -513,9 +464,22 @@ fig_hour = px.bar(
     x="hour", y="alerts",
     title="Fatigue Alerts by Hour"
 )
+fig_hour.update_traces(marker_color='#1581BF')  # Use teal from palette
 fig_hour.update_layout(
     plot_bgcolor='#e6f2ff',
-    paper_bgcolor='#e6f2ff'
+    paper_bgcolor='#e6f2ff',
+    shapes=[
+        dict(
+            type='rect',
+            xref='paper',
+            yref='paper',
+            x0=0,
+            y0=0,
+            x1=1,
+            y1=1,
+            line=dict(color='black', width=1)
+        )
+    ]
 )
 st.markdown('<div class="chart-container">', unsafe_allow_html=True)
 st.plotly_chart(fig_hour, use_container_width=True)
@@ -530,9 +494,22 @@ if col_shift:
     )
     # Force the x-axis (shift) to be categorical to avoid decimal labels
     fig_shift.update_xaxes(type='category')
+    fig_shift.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
     fig_shift.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_shift, use_container_width=True)
@@ -545,13 +522,25 @@ if col_shift:
         heat_df,
         x="hour", y=col_shift, z="alerts",
         title="Heatmap Fatigue by Shift & Hour",
-        color_continuous_scale="reds"
+        color_continuous_scale=["#CCE5CF", "#3DB6B1", "#1581BF", "#F6B1CE"]  # Use palette colors
     )
     # Force the y-axis (shift) to be categorical to avoid decimal labels
     fig_heat.update_yaxes(type='category')
     fig_heat.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_heat, use_container_width=True)
@@ -567,9 +556,22 @@ if col_operator:
         x="operator", y="alerts",
         title="Top Fatigue Alerts by Operator"
     )
+    fig_operator.update_traces(marker_color='#F6B1CE')  # Use pink pastel from palette
     fig_operator.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_operator, use_container_width=True)
@@ -587,9 +589,22 @@ if 'day_of_week' in df.columns:
         x=day_counts.index, y=day_counts.values,
         title="Fatigue Alerts by Day of Week (Workload Pattern)"
     )
+    fig_day.update_traces(marker_color='#1581BF')  # Use teal from palette
     fig_day.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_day, use_container_width=True)
@@ -604,9 +619,22 @@ if col_fleet_type:
         x=col_fleet_type, y="alerts",
         title="Fatigue Alerts by Fleet Type (Task Complexity)"
     )
+    fig_fleet.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
     fig_fleet.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_fleet, use_container_width=True)
@@ -623,9 +651,22 @@ if col_speed and "hour" in df.columns:
             title="Speed vs Hour of Day (Fatigue Events) - Environmental Factor",
             hover_data=[col_operator, col_asset]
         )
+        fig_speed_hour.update_traces(marker_color='#F6B1CE')  # Use pink pastel from palette
         fig_speed_hour.update_layout(
             plot_bgcolor='#e6f2ff',
-            paper_bgcolor='#e6f2ff'
+            paper_bgcolor='#e6f2ff',
+            shapes=[
+                dict(
+                    type='rect',
+                    xref='paper',
+                    yref='paper',
+                    x0=0,
+                    y0=0,
+                    x1=1,
+                    y1=1,
+                    line=dict(color='black', width=1)
+                )
+            ]
         )
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.plotly_chart(fig_speed_hour, use_container_width=True)
@@ -639,9 +680,22 @@ if "duration_sec" in df.columns and "hour" in df.columns:
         title="Fatigue Event Duration vs Hour of Day (Physiological Response)",
         hover_data=[col_operator, col_asset]
     )
+    fig_duration_hour.update_traces(marker_color='#1581BF')  # Use teal from palette
     fig_duration_hour.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_duration_hour, use_container_width=True)
@@ -655,9 +709,23 @@ if col_operator and col_shift:
         x=col_operator, y="alerts", color=col_shift,
         title="Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
     )
+    # Use palette colors for different shifts
     fig_op_shift.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ],
+        colorway=['#F6B1CE', '#1581BF', '#3DB6B1', '#CCE5CF']  # Assign palette colors to shifts
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_op_shift, use_container_width=True)
@@ -678,18 +746,14 @@ if 'week' in df.columns and col_shift:
         title="Weekly Fatigue Trend by Shift (Recovery Pattern)",
         markers=True
     )
-    # Customize colors for each shift
+    # Customize colors for each shift using palette
     if len(weekly_shift_trend['shift_legend'].unique()) >= 2:
-        # Assign specific colors to shifts (e.g., Shift 1: blue, Shift 2: red)
+        # Assign specific colors to shifts from palette
         color_map = {}
         unique_shifts = sorted(weekly_shift_trend['shift_legend'].unique())
+        palette_colors = ['#F6B1CE', '#1581BF', '#3DB6B1', '#CCE5CF']
         for i, shift in enumerate(unique_shifts):
-            if i == 0:
-                color_map[shift] = 'blue'
-            elif i == 1:
-                color_map[shift] = 'red'
-            else:
-                color_map[shift] = f'hsl({i*60}, 70%, 50%)'  # Generate different colors for more than 2 shifts
+            color_map[shift] = palette_colors[i % len(palette_colors)]
         
         fig_weekly.update_traces(marker=dict(size=8))
         fig_weekly.update_layout(
@@ -710,7 +774,19 @@ if 'week' in df.columns and col_shift:
     
     fig_weekly.update_layout(
         plot_bgcolor='#e6f2ff',
-        paper_bgcolor='#e6f2ff'
+        paper_bgcolor='#e6f2ff',
+        shapes=[
+            dict(
+                type='rect',
+                xref='paper',
+                yref='paper',
+                x0=0,
+                y0=0,
+                x1=1,
+                y1=1,
+                line=dict(color='black', width=1)
+            )
+        ]
     )
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
     st.plotly_chart(fig_weekly, use_container_width=True)
@@ -726,9 +802,22 @@ if col_speed:
             title="Speed Distribution (Task Complexity Indicator)",
             nbins=20
         )
+        fig_speed_dist.update_traces(marker_color='#3DB6B1')  # Use turquoise from palette
         fig_speed_dist.update_layout(
             plot_bgcolor='#e6f2ff',
-            paper_bgcolor='#e6f2ff'
+            paper_bgcolor='#e6f2ff',
+            shapes=[
+                dict(
+                    type='rect',
+                    xref='paper',
+                    yref='paper',
+                    x0=0,
+                    y0=0,
+                    x1=1,
+                    y1=1,
+                    line=dict(color='black', width=1)
+                )
+            ]
         )
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.plotly_chart(fig_speed_dist, use_container_width=True)
