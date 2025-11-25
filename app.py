@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -14,207 +15,209 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Force light theme for entire app
+# Custom CSS for professional look with cream background and fancy visuals
 st.markdown("""
 <style>
-    /* Force white background for entire Streamlit app */
-    .stApp {
-        background-color: white !important;
-        color: #333333 !important;
-    }
-    
-    /* Remove all background colors from Streamlit containers */
-    .css-1d391kg, .css-1v3fvcr, .css-1l02z7j, .css-1n7v2ny, .css-145kmo2, .css-1y4p8pa {
-        background-color: white !important;
-        border: none !important;
-    }
-    
-    /* Ensure text is readable */
-    body, p, div, span, h1, h2, h3, h4, h5, h6 {
-        color: #333333 !important;
-    }
-    
-    /* Fix Plotly chart background */
-    .plotly-graph-div {
-        background-color: white !important;
-    }
-    
-    /* Header styling - no background, clean professional look */
     .main-header {
-        padding: 25px;
-        margin-bottom: 25px;
+        background-color: #003366;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
         text-align: center;
-        border-bottom: 2px solid #003366;
-        color: #003366;
-        font-weight: bold;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    
-    .main-header h1 {
-        font-size: 2.5em;
-        margin-bottom: 5px;
-        color: #003366;
-    }
-    
-    .main-header p {
-        font-size: 1.2em;
-        color: #666666;
-        margin-top: 10px;
-    }
-    
-    /* Metric card styling */
     .metric-card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 6px solid #003366;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8f0;
+        background-color: #fff9f0; /* Cream color */
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 5px solid #003366;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
     }
-    
-    /* Insight box styling */
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
     .insight-box {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 6px solid #ff6b6b;
-        margin: 15px 0;
-        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.1);
-        border: 1px solid #ffe0e0;
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 5px solid #ff6b6b;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    
-    /* Footer styling */
     .footer {
         text-align: center;
-        padding: 25px;
-        color: #666666;
-        font-size: 0.95em;
-        background: white;
-        border-top: 1px solid #e1e8f0;
-        margin-top: 30px;
-    }
-    
-    /* Chart container */
-    .chart-container {
-        background: white;
-        padding: 25px;
-        border-radius: 15px;
-        margin: 15px 0;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8f0;
-    }
-    
-    /* Subheader styling */
-    .subheader-style {
-        padding: 15px 20px;
-        border-radius: 12px;
-        margin: 20px 0 25px 0;
-        border-left: 4px solid #003366;
-        box-shadow: 0 4px 15px rgba(0, 51, 102, 0.1);
-        border: 1px solid #e1e8f0;
-        background: white;
-    }
-    
-    .subheader-style h2 {
-        color: #003366;
-        margin: 0;
-    }
-    
-    /* Insight card */
-    .insight-card {
-        background: white;
         padding: 20px;
-        border-radius: 12px;
+        color: gray;
+        font-size: 0.9em;
+        background-color: #f8f8f8;
+        border-top: 1px solid #ddd;
+    }
+    .risk-matrix {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 20px 0;
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .risk-matrix th, .risk-matrix td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    .risk-matrix th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    .critical { background-color: #ffebee; }
+    .high { background-color: #fff3e0; }
+    .medium { background-color: #fffde7; }
+    .low { background-color: #f1f8e9; }
+    .chat-container {
+        background-color: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        height: 400px;
+        overflow-y: auto;
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .user-message {
+        background-color: #e3f2fd;
+        color: black;
+        padding: 10px;
+        border-radius: 10px;
         margin: 10px 0;
-        border-left: 5px solid #ff6b6b;
-        box-shadow: 0 3px 15px rgba(255, 107, 107, 0.1);
-        border: 1px solid #ffe0e0;
+        text-align: right;
+        border: 1px solid #bbdefb;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    
-    /* Metric container */
-    .metric-container {
-        background: white;
+    .ai-message {
+        background-color: #f5f5f5;
+        color: black;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+        text-align: left;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .chat-box {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 10px;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .user-question {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .ai-answer {
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    /* Fancy visual styling */
+    .fancy-visual {
+        background-color: #fff9f0; /* Cream background */
         padding: 20px;
-        border-radius: 15px;
-        margin: 10px;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
-        border: 1px solid #e1e8f0;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border: 1px solid #ddd;
+    }
+    .fancy-visual h3 {
+        color: #003366;
+        border-bottom: 2px solid #003366;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Header - Professional, no background, no icons
-st.markdown("""
-<div class="main-header">
-    <h1>MineVision AI - Advanced Fatigue Analytics</h1>
-    <p>Proactive Safety Intelligence for Mining Operations</p>
-</div>
-""", unsafe_allow_html=True)
+# Header
+st.markdown('<div class="main-header"><h1>Safety Analysis and AI - Advanced Fatigue Analysis</h1><p>Proactive Safety Intelligence for Mining Operations</p></div>', unsafe_allow_html=True)
 
-# # =================== CHAT AI SECTION =====================
-# st.subheader("MineVision AI Assistant")
+# =================== CHAT AI SECTION =====================
+st.subheader("MineVision AI Assistant")
 
-# # Initialize session state for chat
-# if 'chat_history' not in st.session_state:
-#     st.session_state.chat_history = []
+# Initialize session state for chat
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
-# # Display chat history in a fancy box with white background
-# st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-# for message in st.session_state.chat_history:
-#     if message['role'] == 'user':
-#         st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
-#     else:
-#         st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
-# st.markdown('</div>', unsafe_allow_html=True)
+# Display chat history in a fancy box with white background
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for message in st.session_state.chat_history:
+    if message['role'] == 'user':
+        st.markdown(f'<div class="user-message">You: {message["content"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="ai-message">MineVision AI: {message["content"]}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# # Input for user question
-# user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
+# Input for user question
+user_input = st.text_input("Ask a question about the fatigue data...", key="chat_input")
 
-# def get_groq_response(prompt):
-#     """Function to get response from Groq API"""
-#     api_key = "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"  # Your provided token
-#     headers = {
-#         "Authorization": f"Bearer {api_key}",
-#         "Content-Type": "application/json"
-#     }
+def get_groq_response(prompt):
+    """Function to get response from Groq API"""
+    api_key = "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"  # Your provided token
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
     
-#     # Construct the full prompt with context
-#     full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
+    # Construct the full prompt with context
+    full_prompt = f"Context: Mining fatigue data analysis dashboard. Question: {prompt}"
     
-#     payload = {
-#         "model": "llama3-70b-8192",  # Using a powerful model
-#         "messages": [
-#             {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
-#             {"role": "user", "content": full_prompt}
-#         ],
-#         "temperature": 0.5,
-#         "max_tokens": 500,
-#         "top_p": 1,
-#         "stop": None
-#     }
+    payload = {
+        "model": "llama3-70b-8192",  # Using a powerful model
+        "messages": [
+            {"role": "system", "content": "You are an expert in mining safety and fatigue risk management. Provide concise, accurate answers based on the provided mining fatigue data and general knowledge of mining operations."},
+            {"role": "user", "content": full_prompt}
+        ],
+        "temperature": 0.5,
+        "max_tokens": 500,
+        "top_p": 1,
+        "stop": None
+    }
     
-#     try:
-#         response = requests.post("https://api.groq.com/openai/v1/chat/completions  ", headers=headers, json=payload)
-#         response.raise_for_status()
-#         result = response.json()
-#         return result['choices'][0]['message']['content'].strip()
-#     except requests.exceptions.RequestException as e:
-#         return f"Error calling Groq API: {str(e)}"
-#     except KeyError:
-#         return "Received unexpected response from Groq API."
+    try:
+        response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        return result['choices'][0]['message']['content'].strip()
+    except requests.exceptions.RequestException as e:
+        return f"Error calling Groq API: {str(e)}"
+    except KeyError:
+        return "Received unexpected response from Groq API."
 
-# if st.button("Send", key="send_button"):
-#     if user_input:
-#         # Add user message to history
-#         st.session_state.chat_history.append({"role": "user", "content": user_input})
+if st.button("Send", key="send_button"):
+    if user_input:
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
         
-#         # Get response from Groq API
-#         response = get_groq_response(user_input)
+        # Get response from Groq API
+        response = get_groq_response(user_input)
         
-#         # Add AI response to history
-#         st.session_state.chat_history.append({"role": "assistant", "content": response})
+        # Add AI response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
         
-#         # Rerun to update the chat display
-#         st.rerun()
+        # Rerun to update the chat display
+        st.rerun()
 
 
 # =================== LOAD DATA ======================
@@ -383,7 +386,7 @@ else:
 
 
 # =================== FATIGUE RISK CATEGORIZATION =====================
-st.markdown('<div class="subheader-style"><h2>Fatigue Risk Categorization</h2></div>', unsafe_allow_html=True)
+st.subheader("Fatigue Risk Categorization")
 
 # Define risk categories based on the provided matrix
 if col_speed and "hour" in df.columns:
@@ -405,12 +408,14 @@ if col_speed and "hour" in df.columns:
         title="Fatigue Risk Categories Distribution",
         labels={'x': 'Risk Category', 'y': 'Number of Alerts'},
         color=risk_counts.index,
-        color_discrete_map={'Critical': 'red', 'High': 'orange', 'Medium': 'yellow', 'Low': 'green'}
+        color_discrete_map={'Critical': '#d32f2f', 'High': '#f57c00', 'Medium': '#fbc02d', 'Low': '#388e3c'}
     )
     fig_risk.update_layout(
         xaxis_title="Risk Category",
         yaxis_title="Number of Alerts",
-        height=400
+        height=400,
+        plot_bgcolor='rgba(255,249,240,0.8)',  # Cream background for the plot area
+        paper_bgcolor='rgba(255,249,240,0.8)'  # Cream background for the entire figure
     )
     # Add legend to explain each category
     fig_risk.update_layout(
@@ -432,7 +437,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + high-speed haul road",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="red",
+                bgcolor="#d32f2f",
                 opacity=0.8
             )
         elif cat == 'High':
@@ -442,7 +447,7 @@ if col_speed and "hour" in df.columns:
                 text="Moderate fatigue + decline haul road",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="orange",
+                bgcolor="#f57c00",
                 opacity=0.8
             )
         elif cat == 'Medium':
@@ -452,7 +457,7 @@ if col_speed and "hour" in df.columns:
                 text="High fatigue + low-risk task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="yellow",
+                bgcolor="#fbc02d",
                 opacity=0.8
             )
         elif cat == 'Low':
@@ -462,43 +467,49 @@ if col_speed and "hour" in df.columns:
                 text="Low fatigue + non-hazard task",
                 showarrow=False,
                 font=dict(size=10),
-                bgcolor="green",
+                bgcolor="#388e3c",
                 opacity=0.8
             )
     
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_risk, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.plotly_chart(fig_risk, width="stretch")
 
 
 # =================== KPI METRICS =====================
-st.markdown('<div class="subheader-style"><h2>Executive Safety Dashboard</h2></div>', unsafe_allow_html=True)
+st.subheader("Executive Safety Dashboard")
 
+# Create a container for the metrics with fancy styling
+st.markdown('<div class="fancy-visual">', unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 
+# Apply the metric card styling
 with col1:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Total Alerts", f"{len(df):,}")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Operators", df[col_operator].nunique() if col_operator else "-")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col3:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Qty Equipment", df[col_asset].nunique() if col_asset else "-")  # Changed from "Assets" to "Qty Equipment"
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col4:
-    st.markdown('<div class="metric-container">', unsafe_allow_html=True)
+    st.markdown('<div class="metric-card">', unsafe_allow_html=True)
     st.metric("Avg Duration (sec)", round(df["duration_sec"].mean(),2) if "duration_sec" in df.columns else "N/A")
     st.markdown('</div>', unsafe_allow_html=True)
 
+st.markdown('</div>', unsafe_allow_html=True)
+
 
 # =================== TREND ANALYTICS =====================
-st.markdown('<div class="subheader-style"><h2>Fatigue Trend Analysis</h2></div>', unsafe_allow_html=True)
+st.subheader("Fatigue Trend Analysis")
+
+# Create a container for the trend analysis with fancy styling
+st.markdown('<div class="fancy-visual">', unsafe_allow_html=True)
 
 # Hourly
 fig_hour = px.bar(
@@ -506,9 +517,11 @@ fig_hour = px.bar(
     x="hour", y="alerts",
     title="Fatigue Alerts by Hour"
 )
-st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-st.plotly_chart(fig_hour, use_container_width=True)
-st.markdown('</div>', unsafe_allow_html=True)
+fig_hour.update_layout(
+    plot_bgcolor='rgba(255,249,240,0.8)',
+    paper_bgcolor='rgba(255,249,240,0.8)'
+)
+st.plotly_chart(fig_hour, width="stretch")
 
 # Shift-Based
 if col_shift:
@@ -519,9 +532,11 @@ if col_shift:
     )
     # Force the x-axis (shift) to be categorical to avoid decimal labels
     fig_shift.update_xaxes(type='category')
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_shift, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_shift.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_shift, width="stretch")
 
     # hour inside shift heatmap
     heat_df = df.groupby([col_shift, "hour"]).size().reset_index(name="alerts")
@@ -534,9 +549,11 @@ if col_shift:
     )
     # Force the y-axis (shift) to be categorical to avoid decimal labels
     fig_heat.update_yaxes(type='category')
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_heat, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_heat.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_heat, width="stretch")
 
 
 # Operator Ranking
@@ -548,13 +565,20 @@ if col_operator:
         x="operator", y="alerts",
         title="Top Fatigue Alerts by Operator"
     )
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_operator, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_operator.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_operator, width="stretch")
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =================== NEW CHARTS (Based on Mining Fatigue Factors) =====================
-st.markdown('<div class="subheader-style"><h2>Advanced Mining Fatigue Analytics</h2></div>', unsafe_allow_html=True)
+st.subheader("Advanced Mining Fatigue Analytics")
+
+# Create a container for the advanced analytics with fancy styling
+st.markdown('<div class="fancy-visual">', unsafe_allow_html=True)
 
 # 1. Day of Week Analysis (Workload Pattern)
 if 'day_of_week' in df.columns:
@@ -564,9 +588,11 @@ if 'day_of_week' in df.columns:
         x=day_counts.index, y=day_counts.values,
         title="Fatigue Alerts by Day of Week (Workload Pattern)"
     )
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_day, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_day.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_day, width="stretch")
 
 # 2. Fleet Type Analysis (Task & Workload)
 if col_fleet_type:
@@ -577,9 +603,11 @@ if col_fleet_type:
         x=col_fleet_type, y="alerts",
         title="Fatigue Alerts by Fleet Type (Task Complexity)"
     )
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_fleet, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_fleet.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_fleet, width="stretch")
 
 # 3. Speed vs Hour Analysis (Environmental Factors & Workload)
 if col_speed and "hour" in df.columns:
@@ -592,9 +620,11 @@ if col_speed and "hour" in df.columns:
             title="Speed vs Hour of Day (Fatigue Events) - Environmental Factor",
             hover_data=[col_operator, col_asset]
         )
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.plotly_chart(fig_speed_hour, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        fig_speed_hour.update_layout(
+            plot_bgcolor='rgba(255,249,240,0.8)',
+            paper_bgcolor='rgba(255,249,240,0.8)'
+        )
+        st.plotly_chart(fig_speed_hour, width="stretch")
 
 # 4. Duration vs Hour Analysis (Physiological Response)
 if "duration_sec" in df.columns and "hour" in df.columns:
@@ -604,9 +634,11 @@ if "duration_sec" in df.columns and "hour" in df.columns:
         title="Fatigue Event Duration vs Hour of Day (Physiological Response)",
         hover_data=[col_operator, col_asset]
     )
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_duration_hour, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_duration_hour.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_duration_hour, width="stretch")
 
 # 5. Operator vs Shift Analysis (Shift Pattern Risk)
 if col_operator and col_shift:
@@ -616,9 +648,11 @@ if col_operator and col_shift:
         x=col_operator, y="alerts", color=col_shift,
         title="Operator Fatigue Distribution by Shift (Shift Pattern Risk)"
     )
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_op_shift, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_op_shift.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_op_shift, width="stretch")
 
 # 6. Weekly Trend Analysis (Recovery Pattern) - With Color by Shift
 if 'week' in df.columns and col_shift:
@@ -665,9 +699,11 @@ if 'week' in df.columns and col_shift:
                 trace.line.color = color_map[trace.name]
                 trace.marker.color = color_map[trace.name]
     
-    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    st.plotly_chart(fig_weekly, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    fig_weekly.update_layout(
+        plot_bgcolor='rgba(255,249,240,0.8)',
+        paper_bgcolor='rgba(255,249,240,0.8)'
+    )
+    st.plotly_chart(fig_weekly, width="stretch")
 
 # 7. Speed Distribution Analysis (Task Complexity)
 if col_speed:
@@ -679,23 +715,30 @@ if col_speed:
             title="Speed Distribution (Task Complexity Indicator)",
             nbins=20
         )
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.plotly_chart(fig_speed_dist, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        fig_speed_dist.update_layout(
+            plot_bgcolor='rgba(255,249,240,0.8)',
+            paper_bgcolor='rgba(255,249,240,0.8)'
+        )
+        st.plotly_chart(fig_speed_dist, width="stretch")
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =================== INSIGHTS BY ADVANCED ANALYTICS =====================
-st.markdown('<div class="subheader-style"><h2>Insights by Advanced Analytics</h2></div>', unsafe_allow_html=True)
+st.subheader("Insights by Advanced Analytics")
+
+# Create a container for insights with fancy styling
+st.markdown('<div class="fancy-visual">', unsafe_allow_html=True)
 
 # 1. Critical Hour Analysis (2-5 AM)
 critical_hours = [2, 3, 4, 5]
 critical_alerts = df[df['hour'].isin(critical_hours)]
 critical_pct = (len(critical_alerts) / len(df)) * 100 if len(df) > 0 else 0
 
-st.markdown(f"### Critical Hour Risk (2-5 AM)")
+st.markdown(f"Critical Hour Risk (2-5 AM)")
 # Use conditional formatting for background color
-bg_color = "#ffcccc" if critical_pct > 50 else "#ffebcc" if critical_pct > 25 else "#ffffcc" if critical_pct > 10 else "#e6ffe6"
-st.markdown(f'<div style="background-color: {bg_color}; padding: 15px; border-radius: 10px; border: 2px solid #ccc;">Critical Hour Alerts: {len(critical_alerts)} ({critical_pct:.1f}% of total alerts)</div>', unsafe_allow_html=True)
+bg_color = "#ffebee" if critical_pct > 50 else "#fff3e0" if critical_pct > 25 else "#fffde7" if critical_pct > 10 else "#f1f8e9"
+st.markdown(f'<div style="background-color: {bg_color}; padding: 10px; border-radius: 5px;">Critical Hour Alerts: {len(critical_alerts)} ({critical_pct:.1f}% of total alerts)</div>', unsafe_allow_html=True)
 if critical_pct > 10:  # If more than 10% of alerts happen in critical hours
     st.warning(f"High risk: {critical_pct:.1f}% of fatigue alerts occur during critical hours (2-5 AM). This is a known circadian dip period.")
 else:
@@ -707,7 +750,7 @@ if col_speed:
     high_speed_fatigue = df[df[col_speed] >= high_speed_threshold]
     high_speed_pct = (len(high_speed_fatigue) / len(df)) * 100 if len(df) > 0 else 0
     
-    st.markdown(f"### High-Speed Fatigue Risk (Speed > {high_speed_threshold:.0f} km/h)")
+    st.markdown(f"High-Speed Fatigue Risk (Speed > {high_speed_threshold:.0f} km/h)")
     st.metric("High-Speed Fatigue Events", f"{len(high_speed_fatigue)}", f"{high_speed_pct:.1f}% of total alerts")
     if high_speed_pct > 20:  # If more than 20% of alerts happen at high speed
         st.warning(f"High risk: {high_speed_pct:.1f}% of fatigue alerts occur at high speeds. This increases accident severity potential.")
@@ -719,7 +762,7 @@ if col_shift:
     shift_counts = df[col_shift].value_counts()
     shift_alerts_by_hour = df.groupby([col_shift, 'hour']).size().reset_index(name='alerts')
     
-    st.markdown(f"### Shift Pattern Risk")
+    st.markdown(f"Shift Pattern Risk")
     for shift_val in shift_counts.index:
         shift_pct = (shift_counts[shift_val] / len(df)) * 100
         st.metric(f"Shift {shift_val} Alerts", f"{shift_counts[shift_val]}", f"{shift_pct:.1f}% of total alerts")
@@ -733,7 +776,7 @@ if col_operator:
     operator_alerts = df[col_operator].value_counts()
     top_risk_operators = operator_alerts.head(5)  # Top 5 operators by alerts
     
-    st.markdown(f"### High-Risk Operator Identification")
+    st.markdown(f"High-Risk Operator Identification")
     for op_name, count in top_risk_operators.items():
         op_pct = (count / len(df)) * 100
         st.metric(f"Operator: {op_name}", f"{count} alerts", f"{op_pct:.1f}% of total alerts")
@@ -742,33 +785,35 @@ if col_operator:
         else:
             st.info(f"Operator {op_name} fatigue risk is within acceptable range ({op_pct:.1f}%).")
 
+st.markdown('</div>', unsafe_allow_html=True)
 
-# # =================== FATIGUE RISK MATRIX =====================
-# # Moved to sidebar
-# with st.sidebar:
-#     st.subheader("Fatigue Risk Matrix")
+
+# =================== FATIGUE RISK MATRIX =====================
+# Moved to sidebar
+with st.sidebar:
+    st.subheader("Fatigue Risk Matrix")
     
-#     risk_matrix_data = [
-#         ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
-#         ["Moderate fatigue + decline haul road", "Serious injury", "High"],
-#         ["High fatigue + low-risk task", "Minor injury", "Medium"],
-#         ["Low fatigue + non-hazard task", "No injury", "Low"]
-#     ]
+    risk_matrix_data = [
+        ["High fatigue + high-speed haul road", "Potential fatality", "Critical"],
+        ["Moderate fatigue + decline haul road", "Serious injury", "High"],
+        ["High fatigue + low-risk task", "Minor injury", "Medium"],
+        ["Low fatigue + non-hazard task", "No injury", "Low"]
+    ]
     
-#     risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
+    risk_df = pd.DataFrame(risk_matrix_data, columns=["Likelihood (Fatigue Level)", "Severity (Hazard Impact)", "Risk Tier"])
     
-#     # Display risk matrix as a styled table
-#     html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
-#     for _, row in risk_df.iterrows():
-#         risk_class = row["Risk Tier"].lower()
-#         html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
-#     html_string += '</tbody></table>'
+    # Display risk matrix as a styled table
+    html_string = '<table class="risk-matrix"><thead><tr><th>Likelihood (Fatigue Level)</th><th>Severity (Hazard Impact)</th><th>Risk Tier</th></tr></thead><tbody>'
+    for _, row in risk_df.iterrows():
+        risk_class = row["Risk Tier"].lower()
+        html_string += f'<tr class="{risk_class}"><td>{row["Likelihood (Fatigue Level)"]}</td><td>{row["Severity (Hazard Impact)"]}</td><td>{row["Risk Tier"]}</td></tr>'
+    html_string += '</tbody></table>'
     
-#     st.markdown(html_string, unsafe_allow_html=True)
+    st.markdown(html_string, unsafe_allow_html=True)
 
 
 # =================== AI INSIGHT ENGINE =====================
-st.markdown('<div class="subheader-style"><h2>Automated Insight Summary</h2></div>', unsafe_allow_html=True)
+st.subheader("Automated Insight Summary")
 
 # Create a more elegant summary
 insights = []
@@ -778,25 +823,25 @@ if "hour" in df.columns and not df.empty:
     peak_hour = df["hour"].value_counts().idxmax()
     critical_hours = [2, 3, 4, 5]
     if peak_hour in critical_hours:
-        insights.append(f"Most fatigue risk occurs at **{peak_hour}:00** — during critical circadian low period (2-5 AM). Consider enhanced monitoring.")
+        insights.append(f"⚠️ Most fatigue risk occurs at **{peak_hour}:00** — during critical circadian low period (2-5 AM). Consider enhanced monitoring.")
     else:
         insights.append(f"Most fatigue risk occurs at **{peak_hour}:00** — likely due to circadian drop.")
 
 # Risk shift
 if col_shift and not df.empty:
     worst_shift = df[col_shift].value_counts().idxmax()
-    insights.append(f"Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
+    insights.append(f"👷 Highest fatigue recorded in **Shift {worst_shift}** — review scheduling & workload.")
 
 # Worst operator
 if col_operator and not df.empty:
     worst_operator = df[col_operator].value_counts().idxmax()
-    insights.append(f"Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
+    insights.append(f"⚠️ Operator at highest risk: **{worst_operator}** — suggested coaching or rest plan.")
 
 # Duration risk
 if "duration_sec" in df.columns and not df.empty:
     avg_duration = df["duration_sec"].mean()
     if not pd.isna(avg_duration) and avg_duration > 10:
-        insights.append("Long fatigue event duration suggests slow response — improve alerting training.")
+        insights.append("⏳ Long fatigue event duration suggests slow response — improve alerting training.")
 
 # Critical hour insight
 if "hour" in df.columns and not df.empty:
@@ -804,7 +849,7 @@ if "hour" in df.columns and not df.empty:
     if len(critical_alerts) > 0:
         critical_pct = (len(critical_alerts) / len(df)) * 100
         if critical_pct > 15:
-            insights.append(f"**CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
+            insights.append(f"🌙 **CRITICAL HOUR RISK**: {critical_pct:.1f}% of alerts occur during circadian low (2-5 AM). Consider enhanced monitoring during this period.")
 
 # High-speed insight
 if col_speed and not df.empty:
@@ -812,11 +857,11 @@ if col_speed and not df.empty:
     if len(high_speed_fatigue) > 0:
         high_speed_pct = (len(high_speed_fatigue) / len(df)) * 100
         if high_speed_pct > 20:
-            insights.append(f"**HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
+            insights.append(f"🚀 **HIGH-SPEED RISK**: {high_speed_pct:.1f}% of fatigue events occur at high speeds, increasing accident severity potential.")
 
 # Output insights in an elegant format
 for i in insights:
-    st.markdown(f'<div class="insight-card">{i}</div>', unsafe_allow_html=True)
+    st.markdown(f"- {i}")
 
 
 # ================= FOOTER ===========================
